@@ -8,4 +8,7 @@ export const validators = {
   minLength(value: string, min: number): boolean {
     return value.trim().length >= min
   },
+  matchesField(value: string, other: string): boolean {
+    return value === other
+  },
 }

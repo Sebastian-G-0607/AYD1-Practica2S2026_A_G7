@@ -6,6 +6,7 @@ interface Props {
   loading?: boolean
   disabled?: boolean
   icon?: string
+  loadingLabel?: string
 }
 
 withDefaults(defineProps<Props>(), {
@@ -13,6 +14,7 @@ withDefaults(defineProps<Props>(), {
   type: 'button',
   loading: false,
   disabled: false,
+  loadingLabel: 'Verificando...',
 })
 </script>
 
@@ -39,7 +41,7 @@ withDefaults(defineProps<Props>(), {
     />
 
     <span class="relative z-10 font-bold tracking-wide">
-      {{ loading ? 'Verificando...' : label }}
+      {{ loading ? loadingLabel : label }}
     </span>
 
     <span

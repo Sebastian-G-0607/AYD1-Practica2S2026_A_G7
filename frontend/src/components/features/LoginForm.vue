@@ -78,7 +78,7 @@ const { form, formErrors, isLoading, apiError, handleLogin } = useAuth()
         <p class="text-xs text-on-surface/60 font-body-md">
           ¿Nuevo en el arte?
           <router-link
-            to="/register-request"
+            :to="{ name: 'RegisterRequest' }"
             class="text-primary hover:text-primary/80 font-semibold underline underline-offset-4 ml-1 transition-colors"
           >
             Solicitud de registro
