@@ -12,6 +12,10 @@ public class Solicitud
 
     public int StatusId { get; set; }
 
+    public DateTime FechaSolicitud { get; set; }
+
+    public string? MotivoRechazo { get; set; }
+
     // Navigation
     public SolicitudStatus? Status { get; set; }
 

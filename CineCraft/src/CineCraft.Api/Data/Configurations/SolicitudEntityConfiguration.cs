@@ -31,6 +31,13 @@ public class SolicitudEntityConfiguration : IEntityTypeConfiguration<Solicitud>
         builder.Property(s => s.StatusId)
                .HasColumnName("status_id");
 
+        builder.Property(s => s.FechaSolicitud)
+               .HasColumnName("fecha_solicitud");
+
+        builder.Property(s => s.MotivoRechazo)
+               .HasColumnName("motivo_rechazo")
+               .HasMaxLength(255);
+
         builder.HasOne(s => s.Status)
                .WithMany(st => st.Solicitudes)
                .HasForeignKey(s => s.StatusId)
