@@ -1,3 +1,4 @@
+using CineCraft.Api.Features.Resenias.CreateResenia;
 using CineCraft.Api.Features.Resenias.GetResenias;
 
 namespace CineCraft.Api.Features.Resenias;
@@ -9,5 +10,6 @@ public static class ReseniasEndpoints
         var group = app.MapGroup("/api/resenias");
 
         group.MapGetResenias();
+        group.MapCreateResenia();
     }
 }
