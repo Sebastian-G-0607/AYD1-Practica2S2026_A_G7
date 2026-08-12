@@ -64,6 +64,12 @@ public static class DataExtensions
     {
         return options.UseSeeding((context, _) =>
                     {
+                        if (!context.Set<SolicitudStatus>().Any())
+                        {
+                            SeedSolicitudStatuses(context);
+                            context.SaveChanges();
+                        }
+
                         if (!context.Set<Rol>().Any())
                         {
                             SeedRoles(context);
@@ -78,6 +84,12 @@ public static class DataExtensions
                     })
                     .UseAsyncSeeding(async (context, _, cancellationToken) =>
                     {
+                        if (!context.Set<SolicitudStatus>().Any())
+                        {
+                            SeedSolicitudStatuses(context);
+                            await context.SaveChangesAsync(cancellationToken);
+                        }
+
                         if (!context.Set<Rol>().Any())
                         {
                             SeedRoles(context);
@@ -90,6 +102,15 @@ public static class DataExtensions
                             await context.SaveChangesAsync(cancellationToken);
                         }
                     });
+    }
+
+    private static void SeedSolicitudStatuses(DbContext context)
+    {
+        context.Set<SolicitudStatus>().AddRange(
+            new SolicitudStatus { Descripcion = "Pendiente" },
+            new SolicitudStatus { Descripcion = "Aprobado" },
+            new SolicitudStatus { Descripcion = "Rechazado" }
+        );
     }
 
     private static void SeedRoles(DbContext context)

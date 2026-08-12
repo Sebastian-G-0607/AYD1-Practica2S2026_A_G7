@@ -1,6 +1,7 @@
 using Azure.Identity;
 using CineCraft.Api.Data;
 using CineCraft.Api.Features.Auth;
+using CineCraft.Api.Features.Solicitudes;
 using CineCraft.Api.Shared.Authentication;
 using CineCraft.Api.Shared.Cors;
 using CineCraft.Api.Shared.Database;
@@ -79,6 +80,7 @@ app.UseAuthorization();
 
 app.MapDefaultEndpoints();
 app.MapAuth();
+app.MapSolicitudes();
 
 app.UseHttpLogging();
 

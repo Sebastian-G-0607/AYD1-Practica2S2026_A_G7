@@ -24,10 +24,10 @@ public class ReseniaEntityConfiguration : IEntityTypeConfiguration<Resenia>
         builder.Property(r => r.Calificacion)
                .HasColumnName("calificacion");
 
-        // CHECK constraint: calificacion >= 0 AND calificacion <= 10
+        // CHECK constraint: calificacion >= 1 AND calificacion <= 5
         builder.ToTable(t => t.HasCheckConstraint(
             "CK_resenia_calificacion",
-            "calificacion >= 0 AND calificacion <= 10"));
+            "calificacion >= 1 AND calificacion <= 5"));
 
         builder.Property(r => r.Comentario)
                .HasColumnName("comentario")
