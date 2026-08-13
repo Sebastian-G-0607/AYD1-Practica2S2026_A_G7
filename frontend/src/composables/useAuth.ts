@@ -46,7 +46,11 @@ export function useAuth() {
     try {
       await authStore.login({ email: form.email, password: form.password })
       if (!authStore.error) {
-        await router.push({ name: 'Home' })
+        if (authStore.isAdmin) {
+          await router.push({ name: 'Admin' })
+        } else {
+          await router.push({ name: 'Home' })
+        }
       }
     } catch {
     }
