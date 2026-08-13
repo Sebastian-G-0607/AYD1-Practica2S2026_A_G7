@@ -31,6 +31,9 @@ public class UsuarioEntityConfiguration : IEntityTypeConfiguration<Usuario>
                .HasMaxLength(150)
                .IsRequired();
 
+        builder.HasIndex(u => u.Correo)
+               .IsUnique();
+
         builder.Property(u => u.SolicitudId)
                .HasColumnName("solicitud_id");
 
