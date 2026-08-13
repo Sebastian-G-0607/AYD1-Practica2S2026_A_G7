@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MySharesView from '@/components/features/shares/MySharesView.vue'
+import MySharesView from '@/components/features/shares/MySharesList.vue'
 </script>
 
 <template>

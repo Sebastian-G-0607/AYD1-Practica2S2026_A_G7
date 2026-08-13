@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+
+// Estado reactivo para controlar el modal
+const isModalOpen = ref(false)
+
+const openModal = () => {
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+}
+</script>
+
 <template>
     <aside
     class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/10 shadow-2xl">
@@ -80,7 +95,7 @@
           </div>
           <button
             class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-colors shadow-lg shadow-primary/20 hover:-translate-y-1 transform duration-300"
-            id="open-share-modal">
+            @click="openModal">
             <span class="material-symbols-outlined">share</span>
             <span>Compartir Nuevo</span>
           </button>
@@ -237,11 +252,13 @@
           </div>
         </div>
         <div
-          class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300"
+          class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300"
+          :class="isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
           id="share-modal">
-          <div class="absolute inset-0 bg-background/80 backdrop-blur-xl transition-opacity" id="modal-backdrop"></div>
+          <div class="absolute inset-0 bg-background/80 backdrop-blur-xl transition-opacity" @click="closeModal"></div>
           <div
-            class="bg-surface-container-high w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[870px] transform scale-95 transition-transform duration-300"
+            class="bg-surface-container-high w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[870px] transform transition-transform duration-300"
+            :class="isModalOpen ? 'scale-100' : 'scale-95'"
             id="modal-content">
             <div class="px-6 py-5 border-b border-outline-variant/10 flex justify-between items-center">
               <div>
@@ -250,7 +267,7 @@
                   enviar tu destacado.</p>
               </div>
               <button class="p-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors"
-                id="close-share-modal">
+                @click="closeModal">
                 <span class="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -351,41 +368,13 @@
                 <span class="font-bold text-on-surface">1</span> usuario seleccionado
               </div>
               <button
-                class="bg-primary text-on-primary px-8 py-2.5 rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-all shadow-md shadow-primary/20 hover:shadow-primary/40 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container-high">
+                class="bg-primary text-on-primary px-8 py-2.5 rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-all shadow-md shadow-primary/20 hover:shadow-primary/40 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container-high" @click="closeModal">
                 Compartir
               </button>
             </div>
           </div>
         </div>
-        <script>
-          document.addEventListener('DOMContentLoaded', () => {
-            const modal = document.getElementById('share-modal');
-            const modalContent = document.getElementById('modal-content');
-            const openBtn = document.getElementById('open-share-modal');
-            const closeBtn = document.getElementById('close-share-modal');
-            const backdrop = document.getElementById('modal-backdrop');
-
-            function openModal() {
-              modal.classList.remove('opacity-0', 'pointer-events-none');
-              setTimeout(() => {
-                modalContent.classList.remove('scale-95');
-                modalContent.classList.add('scale-100');
-              }, 10);
-            }
-
-            function closeModal() {
-              modalContent.classList.remove('scale-100');
-              modalContent.classList.add('scale-95');
-              setTimeout(() => {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-              }, 300);
-            }
-
-            openBtn.addEventListener('click', openModal);
-            closeBtn.addEventListener('click', closeModal);
-            backdrop.addEventListener('click', closeModal);
-          });
-        </script>
+        
       </div>
     </main>
   </div>

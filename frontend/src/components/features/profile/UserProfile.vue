@@ -1,4 +1,5 @@
 <template>
+  <aside
     class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/10 shadow-2xl">
     <div class="px-8 py-10 flex items-center gap-3"><span
         class="material-symbols-outlined text-primary text-3xl">movie</span><span
