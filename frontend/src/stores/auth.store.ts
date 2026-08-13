@@ -21,6 +21,19 @@ export const useAuthStore = defineStore('auth', () => {
     return new Date(user.value.expiresAt) > new Date()
   })
 
+  const userRole = computed(() => {
+    return user.value?.role?.toLowerCase() ?? 'estandar'
+  })
+
+  const isAdmin = computed(() => {
+    const r = userRole.value
+    return r === 'admin' || r === 'administrador'
+  })
+
+  const isEstandar = computed(() => {
+    return !isAdmin.value
+  })
+
   async function login(credentials: LoginRequest): Promise<void> {
     isLoading.value = true
     error.value = null
@@ -71,5 +84,17 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
-  return { token, user, isLoading, error, isAuthenticated, login, logout, clearError }
+  return {
+    token,
+    user,
+    isLoading,
+    error,
+    isAuthenticated,
+    userRole,
+    isAdmin,
+    isEstandar,
+    login,
+    logout,
+    clearError,
+  }
 })
