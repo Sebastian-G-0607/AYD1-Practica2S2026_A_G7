@@ -1,6 +1,7 @@
 using CineCraft.Api.Features.Resenias.CreateResenia;
 using CineCraft.Api.Features.Resenias.GetResenias;
 using CineCraft.Api.Features.Resenias.UpdateResenia;
+using CineCraft.Api.Features.Resenias.DeleteResenia;
 
 namespace CineCraft.Api.Features.Resenias;
 
@@ -13,5 +14,6 @@ public static class ReseniasEndpoints
         group.MapGetResenias();
         group.MapCreateResenia();
         group.MapUpdateResenia();
+        group.MapDeleteResenia();
     }
 }
