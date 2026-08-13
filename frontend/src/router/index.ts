@@ -25,6 +25,16 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
     meta: { requiresAuth: true },
   },
+  
+  {
+    path: '/admin/reportes',
+    name: 'AdminReports',
+    component: () => import('@/views/AdminReportsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/login',
@@ -41,6 +51,13 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'Login' }
+  }
+
+  if (
+    to.meta.requiresAdmin &&
+    authStore.user?.role?.toLowerCase() !== 'admin'
+  ) {
+    return { name: 'Home' }
   }
 
   if (to.name === 'Login' && authStore.isAuthenticated) {
