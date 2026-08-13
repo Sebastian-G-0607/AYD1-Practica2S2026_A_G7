@@ -29,6 +29,21 @@ const routes: RouteRecordRaw[] = [
     path: '/:pathMatch(.*)*',
     redirect: '/login',
   },
+  {
+      path: '/shared-with-me',
+      name: 'SharedWithMe',
+      component: () => import('@/views/SharedWithMeView.vue')
+    },
+    {
+      path: '/my-shares',
+      name: 'MyShares',
+      component: () => import('@/views/MySharesView.vue')
+    },
+    {
+      path: '/profile',
+      name: 'Profile',
+      component: () => import('@/views/ProfileView.vue')
+    }
 ]
 
 const router = createRouter({
