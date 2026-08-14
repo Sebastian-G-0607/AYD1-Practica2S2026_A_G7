@@ -1,3 +1,57 @@
+<script setup lang="ts">
+import { reactive, computed } from 'vue'
+
+const userProfile = reactive({
+  nombre: 'Eduardo Lau', 
+  usuario: '@arivera_cine',
+  correo: 'alex.rivera@cinecraft.app',
+  contraseniaActual: '',
+  nuevaContrasenia: '',
+  confirmarContrasenia: ''
+})
+
+// Propiedad computada blindada para TypeScript
+const userInitials = computed(() => {
+  const nameStr = userProfile.nombre || ''
+  const names = nameStr.trim().split(/\s+/) // Separa por espacios
+  
+  if (names.length >= 2 && names[0] && names[1]) {
+    // Usamos charAt(0) que es 100% seguro para TypeScript
+    return (names[0].charAt(0) + names[1].charAt(0)).toUpperCase()
+  } else if (names.length >= 1 && names[0]) {
+    return names[0].substring(0, 2).toUpperCase()
+  }
+  return 'U'
+})
+
+// Función para guardar y validar
+const saveProfile = async () => {
+  if (userProfile.nuevaContrasenia && userProfile.nuevaContrasenia !== userProfile.confirmarContrasenia) {
+    alert('Las contraseñas nuevas no coinciden. Por favor, verifícalas.')
+    return
+  }
+
+  if (userProfile.nuevaContrasenia || userProfile.correo !== 'alex.rivera@cinecraft.app') {
+    const isConfirmed = confirm('Estás a punto de cambiar datos críticos (correo o contraseña). ¿Deseas continuar?')
+    if (!isConfirmed) return
+  }
+
+  console.log('Guardando cambios del perfil en la BD...')
+  console.log('Payload:', {
+    nombre: userProfile.nombre,
+    usuario: userProfile.usuario,
+    correo: userProfile.correo,
+    nuevaContrasenia: userProfile.nuevaContrasenia ? userProfile.nuevaContrasenia : undefined
+  })
+  
+  alert('Perfil actualizado con éxito.')
+  
+  userProfile.contraseniaActual = ''
+  userProfile.nuevaContrasenia = ''
+  userProfile.confirmarContrasenia = ''
+}
+</script>
+
 <template>
   <aside
     class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/10 shadow-2xl">
@@ -58,12 +112,13 @@
             class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span></button>
         <div class="flex items-center gap-3 pl-4 border-l border-outline-variant/20 hover:cursor-pointer group">
           <div class="text-right hidden sm:block">
-            <div class="text-label-md font-label-md text-on-surface">Alex Rivera</div>
+            <div class="text-label-md font-label-md text-on-surface">{{ userProfile.nombre }}</div>
             <div class="text-caption font-caption text-on-surface-variant opacity-70">Crítico Pro</div>
           </div>
           <div
             class="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-label-md text-label-md ring-2 ring-transparent group-hover:ring-primary transition-all">
-            AR</div>
+            {{ userInitials }}
+          </div>
         </div>
       </div>
     </header>
@@ -81,14 +136,14 @@
               <div class="relative group cursor-pointer">
                 <div
                   class="w-40 h-40 rounded-full bg-primary/20 text-primary flex items-center justify-center font-display-lg text-6xl shadow-2xl transition-transform duration-300 group-hover:scale-105">
-                  AR</div>
+                  {{ userInitials }}</div>
                 <div
                   class="absolute inset-0 bg-background/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
                   <span class="material-symbols-outlined text-on-surface text-3xl">photo_camera</span>
                 </div>
               </div>
               <div class="text-center">
-                <h2 class="font-headline-md text-headline-md text-on-surface">Alex Rivera</h2>
+                <h2 class="font-headline-md text-headline-md text-on-surface">{{ userProfile.nombre }}</h2>
                 <p
                   class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1 opacity-70">
                   Crítico Pro</p>
@@ -121,26 +176,29 @@
               <h3
                 class="font-headline-md text-headline-md text-on-surface mb-6 border-b border-outline-variant/20 pb-4">
                 Detalles Personales</h3>
-              <form class="flex flex-col gap-6">
+              <div class="flex flex-col gap-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div class="flex flex-col gap-2">
                     <label class="font-label-md text-label-md text-on-surface-variant">Nombre Completo</label>
                     <input
+                      v-model="userProfile.nombre"
                       class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="text" value="Alex Rivera" />
+                      type="text" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="font-label-md text-label-md text-on-surface-variant">Nombre de Usuario</label>
                     <input
+                      v-model="userProfile.usuario"
                       class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="text" value="@arivera_cine" />
+                      type="text" />
                   </div>
                 </div>
                 <div class="flex flex-col gap-2">
                   <label class="font-label-md text-label-md text-on-surface-variant">Correo Electrónico</label>
                   <input
+                    v-model="userProfile.correo"
                     class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                    type="email" value="alex.rivera@cinecraft.app" />
+                    type="email" />
                 </div>
                 <h3
                   class="font-headline-md text-headline-md text-on-surface mt-4 mb-2 border-b border-outline-variant/20 pb-4">
@@ -148,6 +206,7 @@
                 <div class="flex flex-col gap-2">
                   <label class="font-label-md text-label-md text-on-surface-variant">Contraseña Actual</label>
                   <input
+                    v-model="userProfile.contraseniaActual"
                     class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                     placeholder="••••••••" type="password" />
                 </div>
@@ -155,18 +214,19 @@
                   <div class="flex flex-col gap-2">
                     <label class="font-label-md text-label-md text-on-surface-variant">Nueva Contraseña</label>
                     <input
+                      v-model="userProfile.nuevaContrasenia"
                       class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                       type="password" />
                   </div>
                   <div class="flex flex-col gap-2">
-                    <label class="font-label-md text-label-md text-on-surface-variant">Confirmar Nueva
-                      Contraseña</label>
+                    <label class="font-label-md text-label-md text-on-surface-variant">Confirmar Nueva Contraseña</label>
                     <input
+                      v-model="userProfile.confirmarContrasenia"
                       class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                       type="password" />
                   </div>
                 </div>
-              </form>
+              </div>
             </div>
             <div class="bg-surface-container rounded-xl p-8 shadow-lg border border-outline-variant/10">
               <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Géneros Favoritos</h3>
@@ -193,6 +253,7 @@
             </div>
             <div class="flex justify-end pt-4 pb-12">
               <button
+                @click="saveProfile"
                 class="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-8 py-4 rounded-lg shadow-lg shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1">
                 Guardar Cambios
               </button>
