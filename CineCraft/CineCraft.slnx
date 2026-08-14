@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CineCraft.Api/CineCraft.Api.csproj" />
+    <Project Path="src/CineCraft.AppHost/CineCraft.AppHost.csproj" />
+    <Project Path="src/CineCraft.ServiceDefaults/CineCraft.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>
