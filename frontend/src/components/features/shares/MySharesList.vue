@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useShares } from '@/composables/useShares'
+import ShareReviewModal from '@/components/features/shares/ShareReviewModal.vue'
 
-// Estado reactivo para controlar el modal
+const { mockMyShares, shareReview } = useShares()
 const isModalOpen = ref(false)
+
 
 const openModal = () => {
   isModalOpen.value = true
@@ -10,6 +13,14 @@ const openModal = () => {
 
 const closeModal = () => {
   isModalOpen.value = false
+}
+
+const onShareSubmit = async (userIds: number[]) => {
+  // Simularemos que estamos compartiendo la reseña ID 1 (Blade Runner)
+  for (const userId of userIds) {
+    await shareReview(1, userId)
+  }
+  closeModal()
 }
 </script>
 
@@ -110,270 +121,72 @@ const closeModal = () => {
             <div class="col-span-1 text-right">Acción</div>
           </div>
           <div class="divide-y divide-outline-variant/5">
+            <!-- Iteración dinámica con v-for -->
             <div
+              v-for="share in mockMyShares" 
+              :key="share.reseniaId"
               class="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-surface-container-high/30 transition-colors group">
+              
+              <!-- Columna: Título y Comentario -->
               <div class="col-span-4 flex gap-4 items-center">
                 <div class="w-16 h-24 rounded-lg overflow-hidden shrink-0 shadow-md">
-                  <div
-                    class="w-full h-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform duration-500">
-                    <span class="material-symbols-outlined text-3xl">movie</span></div>
+                  <div class="w-full h-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform duration-500">
+                    <span class="material-symbols-outlined text-3xl">movie</span>
+                  </div>
                 </div>
                 <div>
-                  <h3
-                    class="font-headline-md text-body-lg text-on-surface font-semibold mb-1 group-hover:text-primary transition-colors">
-                    Blade Runner 2049</h3>
-                  <p class="text-caption font-caption text-on-surface-variant line-clamp-2">"La obra maestra de
-                    Villeneuve es visualmente deslumbrante. El uso de la escala y el color crea una atmósfera opresiva
-                    pero hermosa que perdura..."</p>
+                  <h3 class="font-headline-md text-body-lg text-on-surface font-semibold mb-1 group-hover:text-primary transition-colors">
+                    {{ share.tituloPelicula }}
+                  </h3>
+                  <p class="text-caption font-caption text-on-surface-variant line-clamp-2">
+                    {{ share.comentario }}
+                  </p>
                 </div>
               </div>
+
+              <!-- Columna: Destinatario -->
               <div class="col-span-3 flex -space-x-3">
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-30">
-                  SJ</div>
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-20">
-                  MT</div>
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-caption font-caption text-on-surface z-10">
-                  +2</div>
+                <div class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-30" :title="share.destinatarioNombre">
+                  {{ share.destinatarioInitials }}
+                </div>
               </div>
+
+              <!-- Columna: Fecha de Envío -->
               <div class="col-span-2 flex items-center gap-2">
                 <span class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_today</span>
-                <span class="font-body-md text-sm text-on-surface-variant">Oct 12, 2023</span>
+                <span class="font-body-md text-sm text-on-surface-variant">{{ share.fechaEnvio }}</span>
               </div>
+
+              <!-- Columna: Estado (Visto / No Visto) -->
               <div class="col-span-2 flex items-center">
-                <div
+                <div 
+                  v-if="share.visto" 
                   class="flex items-center gap-2 px-3 py-1 bg-secondary-container/20 text-secondary-container rounded-full w-fit">
                   <span class="material-symbols-outlined text-[14px]">visibility</span>
-                  <span class="font-label-md text-xs uppercase tracking-wider">Visto por 3</span>
+                  <span class="font-label-md text-xs uppercase tracking-wider">Visto</span>
                 </div>
-              </div>
-              <div class="col-span-1 flex justify-end">
-                <button
-                  class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
-                  <span class="material-symbols-outlined">more_vert</span>
-                </button>
-              </div>
-            </div>
-            <div
-              class="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-surface-container-high/30 transition-colors group">
-              <div class="col-span-4 flex gap-4 items-center">
-                <div class="w-16 h-24 rounded-lg overflow-hidden shrink-0 shadow-md">
-                  <div
-                    class="w-full h-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform duration-500">
-                    <span class="material-symbols-outlined text-3xl">movie</span></div>
-                </div>
-                <div>
-                  <h3
-                    class="font-headline-md text-body-lg text-on-surface font-semibold mb-1 group-hover:text-primary transition-colors">
-                    Past Lives</h3>
-                  <p class="text-caption font-caption text-on-surface-variant line-clamp-2">"Una delicada exploración de
-                    lo que podría haber sido. El acto final es una clase magistral de emoción contenida y narración
-                    sutil."</p>
-                </div>
-              </div>
-              <div class="col-span-3 flex -space-x-3">
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-30">
-                  DC</div>
-              </div>
-              <div class="col-span-2 flex items-center gap-2">
-                <span class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_today</span>
-                <span class="font-body-md text-sm text-on-surface-variant">Nov 05, 2023</span>
-              </div>
-              <div class="col-span-2 flex items-center">
-                <div
+                <div 
+                  v-else 
                   class="flex items-center gap-2 px-3 py-1 bg-surface-variant text-on-surface-variant rounded-full w-fit">
                   <span class="material-symbols-outlined text-[14px]">visibility_off</span>
                   <span class="font-label-md text-xs uppercase tracking-wider">No Visto</span>
                 </div>
               </div>
+
+              <!-- Columna: Acción -->
               <div class="col-span-1 flex justify-end">
-                <button
-                  class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
-                  <span class="material-symbols-outlined">more_vert</span>
-                </button>
-              </div>
-            </div>
-            <div
-              class="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-surface-container-high/30 transition-colors group">
-              <div class="col-span-4 flex gap-4 items-center">
-                <div class="w-16 h-24 rounded-lg overflow-hidden shrink-0 shadow-md">
-                  <div
-                    class="w-full h-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:scale-105 transition-transform duration-500">
-                    <span class="material-symbols-outlined text-3xl">movie</span></div>
-                </div>
-                <div>
-                  <h3
-                    class="font-headline-md text-body-lg text-on-surface font-semibold mb-1 group-hover:text-primary transition-colors">
-                    The Lighthouse</h3>
-                  <p class="text-caption font-caption text-on-surface-variant line-clamp-2">"Claustrofóbica y
-                    desquiciada. El diseño de sonido por sí solo merece un ensayo. Dafoe y Pattinson están fenomenales."
-                  </p>
-                </div>
-              </div>
-              <div class="col-span-3 flex -space-x-3">
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-30">
-                  SJ</div>
-                <div
-                  class="w-8 h-8 rounded-full border-2 border-surface-container bg-surface-variant flex items-center justify-center text-xs font-bold text-on-surface z-20">
-                  ER</div>
-              </div>
-              <div class="col-span-2 flex items-center gap-2">
-                <span class="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_today</span>
-                <span class="font-body-md text-sm text-on-surface-variant">Nov 18, 2023</span>
-              </div>
-              <div class="col-span-2 flex items-center">
-                <div
-                  class="flex items-center gap-2 px-3 py-1 bg-secondary-container/20 text-secondary-container rounded-full w-fit">
-                  <span class="material-symbols-outlined text-[14px]">visibility</span>
-                  <span class="font-label-md text-xs uppercase tracking-wider">Visto por 1</span>
-                </div>
-              </div>
-              <div class="col-span-1 flex justify-end">
-                <button
-                  class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
+                <button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
                   <span class="material-symbols-outlined">more_vert</span>
                 </button>
               </div>
             </div>
           </div>
-          <div
-            class="px-8 py-4 border-t border-outline-variant/10 flex justify-between items-center bg-surface-container-high/20 text-sm font-body-md text-on-surface-variant">
-            <span>Mostrando 1 a 3 de 12 entradas</span>
-            <div class="flex gap-2">
-              <button class="p-1 rounded hover:bg-surface-variant transition-colors disabled:opacity-50"><span
-                  class="material-symbols-outlined">chevron_left</span></button>
-              <button class="p-1 rounded hover:bg-surface-variant transition-colors"><span
-                  class="material-symbols-outlined">chevron_right</span></button>
-            </div>
-          </div>
         </div>
-        <div
-          class="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300"
-          :class="isModalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
-          id="share-modal">
-          <div class="absolute inset-0 bg-background/80 backdrop-blur-xl transition-opacity" @click="closeModal"></div>
-          <div
-            class="bg-surface-container-high w-full max-w-lg rounded-2xl shadow-2xl relative z-10 flex flex-col max-h-[870px] transform transition-transform duration-300"
-            :class="isModalOpen ? 'scale-100' : 'scale-95'"
-            id="modal-content">
-            <div class="px-6 py-5 border-b border-outline-variant/10 flex justify-between items-center">
-              <div>
-                <h2 class="font-headline-md text-headline-md text-on-surface">Compartir Reseña</h2>
-                <p class="text-caption font-caption text-on-surface-variant mt-1">Selecciona los usuarios a los que
-                  enviar tu destacado.</p>
-              </div>
-              <button class="p-2 rounded-full hover:bg-surface-variant text-on-surface-variant transition-colors"
-                @click="closeModal">
-                <span class="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div class="p-4 border-b border-outline-variant/10 bg-surface-container/50">
-              <div class="relative group">
-                <span
-                  class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
-                <input
-                  class="w-full bg-surface-variant/50 border border-outline-variant/20 rounded-xl py-3 pl-12 pr-6 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all font-body-md"
-                  placeholder="Buscar por nombre o correo..." type="text" />
-              </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-1">
-              <label
-                class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-variant/50 cursor-pointer transition-colors group">
-                <div class="relative flex items-center">
-                  <input class="peer sr-only" type="checkbox" />
-                  <div
-                    class="w-5 h-5 border-2 border-outline-variant rounded peer-checked:bg-primary peer-checked:border-primary transition-colors flex items-center justify-center">
-                    <span
-                      class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-200">check</span>
-                  </div>
-                </div>
-                <div
-                  class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center font-bold text-sm text-on-surface">
-                  SJ</div>
-                <div class="flex-1 min-w-0">
-                  <div
-                    class="font-label-md text-sm text-on-surface truncate group-hover:text-primary transition-colors">
-                    Sarah Jenkins</div>
-                  <div class="font-caption text-caption text-on-surface-variant truncate">@sjenkins_film</div>
-                </div>
-              </label>
-              <label
-                class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-variant/50 cursor-pointer transition-colors group">
-                <div class="relative flex items-center">
-                  <input class="peer sr-only" type="checkbox" />
-                  <div
-                    class="w-5 h-5 border-2 border-outline-variant rounded peer-checked:bg-primary peer-checked:border-primary transition-colors flex items-center justify-center">
-                    <span
-                      class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-200">check</span>
-                  </div>
-                </div>
-                <div
-                  class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center font-bold text-sm text-on-surface">
-                  MT</div>
-                <div class="flex-1 min-w-0">
-                  <div
-                    class="font-label-md text-sm text-on-surface truncate group-hover:text-primary transition-colors">
-                    Marcus Thorne</div>
-                  <div class="font-caption text-caption text-on-surface-variant truncate">@marcust_dop</div>
-                </div>
-              </label>
-              <label
-                class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-variant/50 cursor-pointer transition-colors group">
-                <div class="relative flex items-center">
-                  <input checked="" class="peer sr-only" type="checkbox" />
-                  <div
-                    class="w-5 h-5 border-2 border-outline-variant rounded peer-checked:bg-primary peer-checked:border-primary transition-colors flex items-center justify-center">
-                    <span
-                      class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-200">check</span>
-                  </div>
-                </div>
-                <div
-                  class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-headline-md text-sm">
-                  EL</div>
-                <div class="flex-1 min-w-0">
-                  <div
-                    class="font-label-md text-sm text-on-surface truncate group-hover:text-primary transition-colors">
-                    Elena Rodriguez</div>
-                  <div class="font-caption text-caption text-on-surface-variant truncate">elena.r@cinecraft.app</div>
-                </div>
-              </label>
-              <label
-                class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-variant/50 cursor-pointer transition-colors group">
-                <div class="relative flex items-center">
-                  <input class="peer sr-only" type="checkbox" />
-                  <div
-                    class="w-5 h-5 border-2 border-outline-variant rounded peer-checked:bg-primary peer-checked:border-primary transition-colors flex items-center justify-center">
-                    <span
-                      class="material-symbols-outlined text-[16px] text-on-primary opacity-0 peer-checked:opacity-100 scale-50 peer-checked:scale-100 transition-all duration-200">check</span>
-                  </div>
-                </div>
-                <div
-                  class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center font-bold text-sm text-on-surface">
-                  DC</div>
-                <div class="flex-1 min-w-0">
-                  <div
-                    class="font-label-md text-sm text-on-surface truncate group-hover:text-primary transition-colors">
-                    David Chen</div>
-                  <div class="font-caption text-caption text-on-surface-variant truncate">@dchen_edits</div>
-                </div>
-              </label>
-            </div>
-            <div
-              class="p-6 border-t border-outline-variant/10 bg-surface-container-high flex justify-between items-center rounded-b-2xl">
-              <div class="text-sm font-body-md text-on-surface-variant">
-                <span class="font-bold text-on-surface">1</span> usuario seleccionado
-              </div>
-              <button
-                class="bg-primary text-on-primary px-8 py-2.5 rounded-full font-label-md text-label-md hover:bg-primary-fixed transition-all shadow-md shadow-primary/20 hover:shadow-primary/40 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container-high" @click="closeModal">
-                Compartir
-              </button>
-            </div>
-          </div>
-        </div>
+        <ShareReviewModal 
+          :is-open="isModalOpen" 
+          @close="closeModal" 
+          @share="onShareSubmit"
+        />
         
       </div>
     </main>
