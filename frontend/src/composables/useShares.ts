@@ -8,6 +8,8 @@ export interface SharedReview {
   usuarioDestinatarioId: number
   destinatarioNombre?: string 
   destinatarioInitials?: string
+  remitenteNombre?: string 
+  remitenteInitials?: string
   fechaEnvio: string 
   visto: boolean
 }
@@ -38,6 +40,32 @@ const mockMyShares = ref<SharedReview[]>([
   }
 ])
 
+// Reseñas que otros usuarios han compartido CONTIGO
+const mockSharedWithMe = ref<SharedReview[]>([
+  {
+    reseniaId: 3,
+    tituloPelicula: 'Dune: Part Two',
+    comentario: '"La escala visual y el diseño de sonido son de otro planeta..."',
+    usuarioRemitenteId: 2, 
+    usuarioDestinatarioId: 4, 
+    remitenteNombre: 'Marcus Thorne',
+    remitenteInitials: 'MT',
+    fechaEnvio: 'Mar 15, 2024',
+    visto: false // No la has visto aún
+  },
+  {
+    reseniaId: 4,
+    tituloPelicula: 'Oppenheimer',
+    comentario: '"Un thriller histórico tenso que no te suelta..."',
+    usuarioRemitenteId: 3,
+    usuarioDestinatarioId: 4,
+    remitenteNombre: 'Elena Rodriguez',
+    remitenteInitials: 'ER',
+    fechaEnvio: 'Jul 22, 2023',
+    visto: true
+  }
+])
+
 export function useShares() {
   
   const getMyShares = () => {
@@ -54,6 +82,7 @@ export function useShares() {
 
   return {
     mockMyShares,
+    mockSharedWithMe,
     getMyShares,
     shareReview
   }

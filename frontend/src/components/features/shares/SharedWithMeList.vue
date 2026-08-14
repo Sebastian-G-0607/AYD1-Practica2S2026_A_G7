@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useShares } from '@/composables/useShares'
+
+const { mockSharedWithMe } = useShares()
+</script>
+
 <template>
         <aside
         class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/10 shadow-2xl">
@@ -176,126 +182,68 @@
                                 </div>
                             </div>
                         </article>
-                        <!-- List Items -->
+                       <!-- List Items -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <!-- Iteración dinámica sobre nuestras reseñas simuladas -->
                             <article
+                                v-for="share in mockSharedWithMe" 
+                                :key="share.reseniaId"
                                 class="bg-surface-container rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group cursor-pointer flex flex-col justify-between min-h-[240px]">
+                                
+                                <!-- Resplandor de fondo dinámico (Azul si es Nuevo, Gris/Secundario si es Compartido) -->
                                 <div
-                                    class="absolute -right-12 -top-12 w-32 h-32 bg-secondary-container/5 rounded-full blur-2xl group-hover:bg-secondary-container/10 transition-colors">
+                                    class="absolute -right-12 -top-12 w-32 h-32 rounded-full blur-2xl transition-colors"
+                                    :class="!share.visto ? 'bg-primary/5 group-hover:bg-primary/10' : 'bg-secondary-container/5 group-hover:bg-secondary-container/10'">
                                 </div>
+                                
                                 <div>
                                     <div class="flex items-center justify-between mb-6">
+                                        <!-- Indicador Visual: Etiqueta "Nuevo" o "Compartido" -->
                                         <span
-                                            class="flex items-center gap-2 text-secondary-container bg-secondary-container/10 px-3 py-1 rounded-full font-label-md text-label-md shadow-sm">
-                                            <span class="material-symbols-outlined text-[16px]">share</span>
-                                            Compartido
-                                        </span>
-                                        <div class="flex items-center gap-1 text-secondary-container">
-                                            <span class="material-symbols-outlined text-[16px]"
-                                                style="font-variation-settings: 'FILL' 1;">star</span>
-                                            <span class="font-label-md text-label-md">5.0</span>
-                                        </div>
-                                    </div>
-                                    <h3
-                                        class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                                        The Silent Symphony</h3>
-                                    <p
-                                        class="font-body-md text-body-md text-on-surface-variant opacity-70 line-clamp-2">
-                                        "Un triunfo absoluto de diseño de sonido. Cada cuadro se siente meticulosamente
-                                        creado para evocar una abrumadora sensación de temor."</p>
-                                </div>
-                                <div
-                                    class="mt-6 flex items-center justify-between border-t border-outline-variant/10 pt-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-md text-label-md shadow-sm">
-                                            JD
-                                        </div>
-                                        <div>
-                                            <div class="font-label-md text-label-md text-on-surface">Julian Doss</div>
-                                            <div class="font-caption text-caption text-on-surface-variant opacity-60">
-                                                hace 2 días</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </article>
-                            <article
-                                class="bg-surface-container rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group cursor-pointer flex flex-col justify-between min-h-[240px]">
-                                <div
-                                    class="absolute -right-12 -top-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors">
-                                </div>
-                                <div>
-                                    <div class="flex items-center justify-between mb-6">
-                                        <span
+                                            v-if="!share.visto"
                                             class="flex items-center gap-2 text-primary bg-primary/10 px-3 py-1 rounded-full font-label-md text-label-md shadow-sm">
                                             <span class="material-symbols-outlined text-[16px]">new_releases</span>
                                             Nuevo
                                         </span>
-                                        <div class="flex items-center gap-1 text-secondary-container">
-                                            <span class="material-symbols-outlined text-[16px]"
-                                                style="font-variation-settings: 'FILL' 1;">star</span>
-                                            <span class="font-label-md text-label-md">3.5</span>
-                                        </div>
-                                    </div>
-                                    <h3
-                                        class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                                        Echoes of the Wasteland</h3>
-                                    <p
-                                        class="font-body-md text-body-md text-on-surface-variant opacity-70 line-clamp-2">
-                                        "Visualmente sorprendente, pero el ritmo se arrastra terriblemente en la segunda
-                                        mitad. Una oportunidad perdida para una exploración temática más profunda."</p>
-                                </div>
-                                <div
-                                    class="mt-6 flex items-center justify-between border-t border-outline-variant/10 pt-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md shadow-sm">
-                                            MV</div>
-                                        <div>
-                                            <div class="font-label-md text-label-md text-on-surface">Marcus Vance</div>
-                                            <div class="font-caption text-caption text-on-surface-variant opacity-60">
-                                                hace 5 horas</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </article>
-                            <article
-                                class="bg-surface-container rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group cursor-pointer flex flex-col justify-between min-h-[240px]">
-                                <div
-                                    class="absolute -right-12 -top-12 w-32 h-32 bg-secondary-container/5 rounded-full blur-2xl group-hover:bg-secondary-container/10 transition-colors">
-                                </div>
-                                <div>
-                                    <div class="flex items-center justify-between mb-6">
                                         <span
+                                            v-else
                                             class="flex items-center gap-2 text-secondary-container bg-secondary-container/10 px-3 py-1 rounded-full font-label-md text-label-md shadow-sm">
                                             <span class="material-symbols-outlined text-[16px]">share</span>
                                             Compartido
                                         </span>
+
                                         <div class="flex items-center gap-1 text-secondary-container">
                                             <span class="material-symbols-outlined text-[16px]"
                                                 style="font-variation-settings: 'FILL' 1;">star</span>
-                                            <span class="font-label-md text-label-md">4.2</span>
+                                            <!-- Como el mock no tiene calificación, dejamos un valor fijo visual por ahora -->
+                                            <span class="font-label-md text-label-md">5.0</span>
                                         </div>
                                     </div>
+                                    
                                     <h3
                                         class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                                        Velvet Shadows</h3>
+                                        {{ share.tituloPelicula }}
+                                    </h3>
                                     <p
                                         class="font-body-md text-body-md text-on-surface-variant opacity-70 line-clamp-2">
-                                        "Una brillante versión moderna de la clásica película de giallo. Violencia
-                                        estilizada e implacable envuelta en una banda sonora impecable."</p>
+                                        {{ share.comentario }}
+                                    </p>
                                 </div>
+                                
                                 <div
                                     class="mt-6 flex items-center justify-between border-t border-outline-variant/10 pt-4">
+                                    
+                                    <!-- Identificador del Propietario Original -->
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md shadow-sm">
-                                            SW
+                                            class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-md text-label-md shadow-sm">
+                                            {{ share.remitenteInitials }}
                                         </div>
                                         <div>
-                                            <div class="font-label-md text-label-md text-on-surface">Sarah Wei</div>
+                                            <div class="font-label-md text-label-md text-on-surface">{{ share.remitenteNombre }}</div>
                                             <div class="font-caption text-caption text-on-surface-variant opacity-60">
-                                                hace 1 semana</div>
+                                                Propietario original • {{ share.fechaEnvio }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
