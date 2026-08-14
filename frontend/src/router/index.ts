@@ -5,7 +5,14 @@ import { useAuthStore } from '@/stores/auth.store'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/home',
+    name: 'Root',
+    redirect: () => {
+      const authStore = useAuthStore()
+      if (authStore.isAuthenticated) {
+        return authStore.isAdmin ? { name: 'Admin' } : { name: 'Home' }
+      }
+      return { name: 'Login' }
+    },
   },
   {
     path: '/login',
@@ -23,7 +30,13 @@ const routes: RouteRecordRaw[] = [
     path: '/home',
     name: 'Home',
     component: () => import('@/views/HomeView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/AdminView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
   },
   
   {
@@ -36,8 +49,23 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/admin/reportes',
+    name: 'AdminReports',
+    component: () => import('@/views/AdminReportsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
-    redirect: '/login',
+    redirect: () => {
+      const authStore = useAuthStore()
+      if (authStore.isAuthenticated) {
+        return authStore.isAdmin ? { name: 'Admin' } : { name: 'Home' }
+      }
+      return { name: 'Login' }
+    },
   },
 ]
 
@@ -49,6 +77,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
+  // Si la ruta requiere autenticación y no se ha autenticado
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'Login' }
   }
@@ -61,7 +90,19 @@ router.beforeEach((to) => {
   }
 
   if (to.name === 'Login' && authStore.isAuthenticated) {
-    return { name: 'Home' }
+    return authStore.isAdmin ? { name: 'Admin' } : { name: 'Home' }
+  }
+
+  // Protección de roles
+  if (authStore.isAuthenticated) {
+    // Si la ruta es solo para admin y el usuario es estándar -> redirigir a Home
+    if (to.meta.role === 'admin' && !authStore.isAdmin) {
+      return { name: 'Home' }
+    }
+    // Si la ruta es solo para estándar y el usuario es admin -> redirigir a Admin
+    if (to.meta.role === 'estandar' && authStore.isAdmin) {
+      return { name: 'Admin' }
+    }
   }
 })
 

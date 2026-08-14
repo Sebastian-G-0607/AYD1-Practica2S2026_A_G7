@@ -1,213 +1,146 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth.store'
+import MainLayout from '@/layouts/MainLayout.vue'
+import ReseniasList from '@/components/features/resenias/ReseniasList.vue'
+import ReseniaForm from '@/components/features/resenias/ReseniaForm.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const irAReportes = () => {
-  router.push('/admin/reportes')
+const reseniasKey = ref(0)
+const mostrarFormulario = ref(false)
+
+function abrirFormulario() {
+  mostrarFormulario.value = true
 }
 
-const cerrarSesion = () => {
-  authStore.logout()
-  router.push('/login')
+function cerrarFormulario() {
+  mostrarFormulario.value = false
+}
+
+function handleReseniaCreated() {
+  reseniasKey.value++
+  mostrarFormulario.value = false
 }
 </script>
 
 <template>
-  <main class="min-h-screen bg-surface text-on-surface">
-    <div class="flex min-h-screen">
+  <MainLayout>
+    <!-- Encabezado / Banner Tablero Stitch "Reseñas Destacadas" -->
+    <section class="relative overflow-hidden rounded-2xl bg-surface-container-low border border-surface-bright/50 p-6 md:p-8 shadow-xl">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-      <!-- Sidebar -->
-      <aside
-        class="flex w-72 flex-col border-r border-white/5 bg-surface-container-lowest"
-      >
-        <!-- Logo -->
-        <div class="flex items-center gap-3 px-8 py-8">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-primary/10"
-          >
-            <span class="text-xl text-primary">🎬</span>
-          </div>
-
-          <span class="text-2xl font-bold tracking-tight">
-            CineCraft
-          </span>
-        </div>
-
-        <!-- Navegación -->
-        <nav class="flex-1 px-4">
-
-          <p
-            class="mb-3 px-4 text-xs font-semibold uppercase tracking-widest text-on-surface-variant opacity-60"
-          >
-            Menú Principal
-          </p>
-
-          <button
-            class="mb-2 flex w-full items-center gap-3 rounded-lg bg-surface-container-high px-4 py-3 text-left text-on-surface transition hover:bg-surface-bright"
-          >
-            <span>🏠</span>
-            <span>Panel</span>
-          </button>
-
-          <div class="mt-8">
-            <p
-              class="mb-3 px-4 text-xs font-semibold uppercase tracking-widest text-on-surface-variant opacity-60"
-            >
-              Administración
+      <div class="relative z-10 space-y-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 class="text-3xl md:text-4xl font-bold font-headline-lg text-on-surface">
+              Bienvenido de nuevo, {{ authStore.user?.nombre || 'Cinéfilo' }}
+            </h1>
+            <p class="text-on-surface/70 mt-1 max-w-2xl text-sm md:text-base">
+              Las experiencias cinematográficas más impactantes de la comunidad y la gestión de tus opiniones.
             </p>
-
-            <button
-              class="mb-2 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-on-surface-variant transition hover:bg-surface-container-high hover:text-on-surface"
-            >
-              <span>⏳</span>
-              <span>Solicitudes Pendientes</span>
-            </button>
-
-            <button
-              class="mb-2 flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-on-surface-variant transition hover:bg-surface-container-high hover:text-on-surface"
-            >
-              <span>🕒</span>
-              <span>Historial de Solicitudes</span>
-            </button>
-
-            <button
-              @click="irAReportes"
-              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-on-surface-variant transition hover:bg-primary-container hover:text-white"
-            >
-              <span>📊</span>
-              <span>Reportes de Administrador</span>
-            </button>
           </div>
-        </nav>
 
-        <!-- Cerrar sesión -->
-        <div class="border-t border-white/5 p-4">
           <button
-            @click="cerrarSesion"
-            class="flex w-full items-center justify-center gap-2 rounded-lg bg-surface-container-high px-4 py-3 text-sm font-semibold text-on-surface transition hover:bg-surface-bright"
+            type="button"
+            class="px-5 py-3 bg-primary-container text-on-primary-container rounded-xl font-bold hover:scale-105 transition-all shadow-lg flex items-center gap-2 shrink-0 self-start md:self-auto"
+            @click="abrirFormulario"
           >
-            Cerrar sesión
+            <span class="text-xl leading-none">+</span>
+            <span>Nueva Reseña</span>
           </button>
         </div>
-      </aside>
+
+        <!-- Bento Grid Destacados (Stitch Tablero) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-2">
+          <!-- Highlight Principal (8 Cols) -->
+          <div class="md:col-span-8 group relative rounded-xl overflow-hidden p-6 bg-gradient-to-br from-surface-dim to-surface-container-high border border-surface-bright/60 shadow-lg min-h-[220px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="px-3 py-1 bg-surface-container/80 rounded-full text-xs font-semibold text-primary border border-primary/20">
+                Ciencia Ficción
+              </span>
+              <div class="text-secondary flex gap-0.5 text-sm">
+                ★★★★★
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-2">
+              <h3 class="text-xl md:text-2xl font-bold font-headline-md text-on-surface group-hover:text-primary transition-colors">
+                Neon Genesis: Echoes
+              </h3>
+              <p class="text-sm text-on-surface/80 line-clamp-2 italic">
+                "Un logro visualmente asombroso que redefine la estética ciberpunk moderna al tiempo que ofrece una narrativa central profundamente humana."
+              </p>
+            </div>
+          </div>
+
+          <!-- Highlight Secundario (4 Cols) -->
+          <div class="md:col-span-4 group relative rounded-xl overflow-hidden p-6 bg-gradient-to-tr from-surface-container-high to-surface-dim border border-surface-bright/60 shadow-lg min-h-[220px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="px-3 py-1 bg-surface-container/80 rounded-full text-xs font-semibold text-secondary border border-secondary/20">
+                Cine de Autor
+              </span>
+              <div class="text-secondary flex gap-0.5 text-sm">
+                ★★★★☆
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-2">
+              <h3 class="text-lg font-bold font-headline-md text-on-surface">
+                Flora Anomalous
+              </h3>
+              <p class="text-xs text-on-surface/75 line-clamp-2 italic">
+                "Construcción de mundos en su máxima expresión, inmersiva y aterradora."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección Mis Reseñas (Contenido actual de HomeView) -->
+    <section class="bg-surface-container-low border border-surface-bright/50 rounded-2xl p-6 md:p-8 shadow-xl">
+      <ReseniasList :key="reseniasKey" />
+    </section>
+
+    <!-- Botón Flotante Nueva Reseña (Stitch Tablero FAB) -->
+    <button
+      type="button"
+      class="fixed bottom-8 right-8 z-40 bg-primary-container text-on-primary-container
+             px-5 py-4 rounded-full shadow-2xl font-bold
+             flex items-center gap-2
+             hover:scale-105 transition-transform"
+      @click="abrirFormulario"
+    >
+      <span class="text-2xl leading-none">+</span>
+      <span class="hidden sm:inline">Nueva Reseña</span>
+    </button>
+
+    <!-- Modal Nueva Reseña -->
+    <div
+      v-if="mostrarFormulario"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <!-- Fondo -->
+      <div
+        class="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        @click="cerrarFormulario"
+      />
 
       <!-- Contenido -->
-      <section class="flex-1 p-8">
-
-        <!-- Header -->
-        <header
-          class="mb-8 flex items-center justify-between rounded-xl border border-white/5 bg-surface-container-low p-6"
+      <div class="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Botón cerrar -->
+        <button
+          type="button"
+          class="absolute top-4 right-5 z-20 text-on-surface/60 hover:text-on-surface text-3xl"
+          @click="cerrarFormulario"
         >
-          <div>
-            <p class="text-sm text-on-surface-variant">
-              Bienvenido
-            </p>
+          ×
+        </button>
 
-            <h1 class="mt-1 text-3xl font-bold">
-              Panel de Administración
-            </h1>
-          </div>
-
-          <div class="text-right">
-            <p class="font-semibold text-primary">
-              {{ authStore.user?.nombre ?? 'Administrador' }}
-            </p>
-
-            <p class="text-sm text-on-surface-variant">
-              {{ authStore.user?.email }}
-            </p>
-          </div>
-        </header>
-
-        <!-- Bienvenida -->
-        <section
-          class="relative overflow-hidden rounded-2xl bg-surface-container-high p-8"
-        >
-          <div
-            class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary-container opacity-20 blur-3xl"
-          ></div>
-
-          <div class="relative z-10">
-            <p
-              class="mb-2 text-xs font-semibold uppercase tracking-widest text-primary"
-            >
-              CineCraft
-            </p>
-
-            <h2 class="text-3xl font-bold">
-              Administración de la plataforma
-            </h2>
-
-            <p class="mt-3 max-w-2xl text-on-surface-variant">
-              Desde este panel puedes acceder a las herramientas administrativas
-              disponibles dentro de CineCraft.
-            </p>
-          </div>
-        </section>
-
-        <!-- Cards -->
-        <section class="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-
-          <article
-            class="rounded-xl border border-white/5 bg-surface-container p-6"
-          >
-            <div class="mb-4 text-3xl">
-              ⏳
-            </div>
-
-            <h3 class="text-lg font-semibold">
-              Solicitudes Pendientes
-            </h3>
-
-            <p class="mt-2 text-sm text-on-surface-variant">
-              Revisa las solicitudes de nuevos usuarios.
-            </p>
-          </article>
-
-          <article
-            class="rounded-xl border border-white/5 bg-surface-container p-6"
-          >
-            <div class="mb-4 text-3xl">
-              🕒
-            </div>
-
-            <h3 class="text-lg font-semibold">
-              Historial
-            </h3>
-
-            <p class="mt-2 text-sm text-on-surface-variant">
-              Consulta el historial de solicitudes procesadas.
-            </p>
-          </article>
-
-          <article
-            @click="irAReportes"
-            class="cursor-pointer rounded-xl border border-primary/20 bg-surface-container p-6 transition duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-surface-container-high"
-          >
-            <div class="mb-4 text-3xl">
-              📊
-            </div>
-
-            <h3 class="text-lg font-semibold">
-              Reportes
-            </h3>
-
-            <p class="mt-2 text-sm text-on-surface-variant">
-              Consulta los usuarios con más reseñas y reseñas compartidas.
-            </p>
-
-            <button
-              class="mt-5 rounded-full bg-primary-container px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-            >
-              Ver reportes
-            </button>
-          </article>
-
-        </section>
-      </section>
+        <ReseniaForm @created="handleReseniaCreated" />
+      </div>
     </div>
-  </main>
+  </MainLayout>
 </template>

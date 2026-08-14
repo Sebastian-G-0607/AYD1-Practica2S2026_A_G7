@@ -1,7 +1,7 @@
 // URLs públicas centralizadas del API por ambiente
 const API_URLS = {
   local: 'http://localhost:5000',
-  develop: 'http://localhost:5000',
+  develop: 'http://api:5000',
   main: 'http://localhost:5000',
 } as const
 
