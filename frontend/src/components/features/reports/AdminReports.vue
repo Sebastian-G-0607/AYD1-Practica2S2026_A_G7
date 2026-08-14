@@ -16,7 +16,7 @@ const cargando = ref(false)
 const error = ref('')
 
 const volverAlPanel = () => {
-  router.push('/home')
+  router.push('/admin')
 }
 
 const cargarReportes = async () => {
@@ -24,19 +24,21 @@ const cargarReportes = async () => {
   error.value = ''
 
   try {
-  const [resenias, compartidos] = await Promise.all([
-    reportesService.obtenerTopResenias(),
-    reportesService.obtenerTopCompartidos(),
-  ])
+    const [resenias, compartidos] = await Promise.all([
+      reportesService.obtenerTopResenias(),
+      reportesService.obtenerTopCompartidos(),
+    ])
 
-  topResenias.value = resenias
-  topCompartidos.value = compartidos
-} catch (err) {
-  console.error('Error al cargar reportes:', err)
-  error.value = 'No se pudieron cargar los reportes.'
-} finally {
-  cargando.value = false
+    topResenias.value = resenias
+    topCompartidos.value = compartidos
+  } catch (err) {
+    console.error('Error al cargar reportes:', err)
+    error.value = 'No se pudieron cargar los reportes.'
+  } finally {
+    cargando.value = false
+  }
 }
+
 
 const maxResenias = computed(() => {
   if (topResenias.value.length === 0) return 1
