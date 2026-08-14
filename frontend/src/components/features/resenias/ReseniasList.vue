@@ -4,12 +4,16 @@ import {
   getResenias,
   updateResenia,
   deleteResenia,
+  toggleArchivarResenia,
+  toggleDestacar
+  
 } from '@/services/resenia.service'
 import type { Resenia } from '@/types/resenia.types'
 
 const resenias = ref<Resenia[]>([])
 const loading = ref(true)
 const error = ref('')
+const emit = defineEmits(['cambioEstado'])
 
 // =========================
 // EDICIÓN
@@ -50,6 +54,34 @@ async function cargarResenias() {
     error.value = 'No fue posible cargar las reseñas.'
   } finally {
     loading.value = false
+  }
+}
+
+// =========================
+// ARCHIVAR RESEÑA
+// =========================
+
+async function archivar(id: number) {
+  try {
+    await toggleArchivarResenia(id)
+    await cargarResenias()
+  } catch (err) {
+    console.error(err)
+    error.value = 'No fue posible archivar la reseña.'
+  }
+}
+
+// =========================
+// DESTACAR RESEÑA
+// =========================
+async function destacar(id: number) {
+  try {
+    await toggleDestacar(id)
+    await cargarResenias()
+    emit('cambioEstado') // Avisa al componente padre que algo cambió
+  } catch (err) {
+    console.error(err)
+    error.value = 'No fue posible destacar la reseña.'
   }
 }
 
@@ -236,6 +268,32 @@ onMounted(() => {
                 >
                   Editar reseña
                 </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold transition-colors flex items-center gap-1"
+                  :class="resenia.destacada ? 'text-yellow-400 hover:text-yellow-300' : 'text-on-surface/50 hover:text-on-surface'"
+                  @click="destacar(resenia.id)"
+                >
+                  {{ resenia.destacada ? '★ Quitar destacado' : '☆ Destacar' }}
+                </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-primary hover:underline"
+                  @click="iniciarEdicion(resenia)"
+                >
+                  Editar reseña
+                </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-amber-400 hover:text-amber-300 hover:underline transition-colors"
+                  @click="archivar(resenia.id)"
+                >
+                  Archivar reseña
+                  </button>
+
 
                 <button
                   type="button"

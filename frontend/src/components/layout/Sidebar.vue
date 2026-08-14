@@ -46,9 +46,9 @@ const standardNavItems: NavItem[] = [
   {
     name: 'Archivados',
     label: 'Archivados',
-    to: '#',
+    to: '/archivadas',
     icon: 'archive',
-    isImplemented: false,
+    isImplemented: true,
   },
   {
     name: 'CompartidosConmigo',

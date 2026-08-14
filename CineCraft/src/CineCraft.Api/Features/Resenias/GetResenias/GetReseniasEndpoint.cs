@@ -19,7 +19,8 @@ public static class GetReseniasEndpoint
                     r.Comentario,
                     r.EtiquetaId,
                     r.Etiqueta!.Descripcion,
-                    r.Destacada
+                    r.Destacada,
+                    r.Archivada
                 ))
                 .ToListAsync();
 
