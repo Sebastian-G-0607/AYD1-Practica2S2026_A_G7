@@ -40,6 +40,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, role: 'estandar' },
   },
 
+    {
+    path: '/destacadas',
+    name: 'Destacadas',
+    component: () => import('@/views/DestacadasView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
 
   {
     path: '/admin',
