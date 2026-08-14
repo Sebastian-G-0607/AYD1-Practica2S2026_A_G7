@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using CineCraft.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
