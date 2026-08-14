@@ -85,6 +85,8 @@ app.MapAuth();
 app.MapSolicitudes();
 app.MapReportes();
 app.MapResenias();
+app.MapShares();
+app.MapUsers();
 
 app.UseHttpLogging();
 
