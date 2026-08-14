@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import MainLayout from '@/layouts/MainLayout.vue'
 import ReseniasList from '@/components/features/resenias/ReseniasList.vue'
 import ReseniaForm from '@/components/features/resenias/ReseniaForm.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 
 const reseniasKey = ref(0)

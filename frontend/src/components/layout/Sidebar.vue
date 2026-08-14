@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -26,7 +27,8 @@ interface NavItem {
   isImplemented?: boolean
 }
 
-const navItems: NavItem[] = [
+// Opciones del Menú para usuario Estándar
+const standardNavItems: NavItem[] = [
   {
     name: 'Home',
     label: 'Tablero',
@@ -64,6 +66,42 @@ const navItems: NavItem[] = [
   },
 ]
 
+// Opciones del Menú Principal para usuario Admin
+const adminMainNavItems: NavItem[] = [
+  {
+    name: 'AdminPanel',
+    label: 'Panel',
+    to: '/admin',
+    icon: 'dashboard',
+    isImplemented: true,
+  },
+]
+
+// Opciones de Administración para usuario Admin (Stitch)
+const adminSectionNavItems: NavItem[] = [
+  {
+    name: 'PendingRequests',
+    label: 'Solicitudes Pendientes',
+    to: '#',
+    icon: 'pending_actions',
+    isImplemented: false,
+  },
+  {
+    name: 'RequestHistory',
+    label: 'Historial de Solicitudes',
+    to: '#',
+    icon: 'history',
+    isImplemented: false,
+  },
+  {
+    name: 'AdminReports',
+    label: 'Reportes de Admin',
+    to: '/admin/reportes',
+    icon: 'analytics',
+    isImplemented: true,
+  },
+]
+
 function isCurrentRoute(item: NavItem) {
   if (!item.isImplemented || item.to === '#') return false
   return route.path === item.to
@@ -80,18 +118,21 @@ function closeMobileSidebar() {
 </script>
 
 <template>
+  <!-- Overlay para móviles -->
   <div
     v-if="props.isOpen"
     class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden transition-opacity"
     @click="closeMobileSidebar"
   />
 
+  <!-- Contenedor Lateral (Sidebar) estilo Stitch Reutilizable -->
   <aside
     :class="[
       'fixed top-0 bottom-0 left-0 z-50 w-72 bg-surface-container-lowest border-r border-outline-variant/10 shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0',
       props.isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
     ]"
   >
+    <!-- Encabezado / Logo Stitch -->
     <div class="px-8 py-8 border-b border-outline-variant/10 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined text-primary text-[32px]">movie</span>
@@ -100,11 +141,12 @@ function closeMobileSidebar() {
             CineCraft
           </span>
           <p class="text-xs text-primary font-medium">
-            Panel Estándar
+            {{ authStore.isAdmin ? 'Panel Admin' : 'Panel Estándar' }}
           </p>
         </div>
       </div>
 
+      <!-- Botón cerrar en móvil -->
       <button
         type="button"
         class="lg:hidden text-on-surface-variant hover:text-on-surface p-1"
@@ -114,48 +156,141 @@ function closeMobileSidebar() {
       </button>
     </div>
 
+    <!-- Navegación Reutilizable según Rol (Stitch) -->
     <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-      <div>
-        <p class="px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50 mb-1">
-          Menú Principal
-        </p>
+      
+      <!-- ==================================== -->
+      <!-- MENU PARA USUARIO ADMIN             -->
+      <!-- ==================================== -->
+      <template v-if="authStore.isAdmin">
+        <!-- Menú Principal Admin -->
+        <div>
+          <p class="px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50 mb-1">
+            Menú Principal
+          </p>
 
-        <nav class="space-y-2">
-          <template v-for="item in navItems" :key="item.name">
-            <router-link
-              v-if="item.isImplemented"
-              :to="item.to"
-              class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group"
-              :class="[
-                isCurrentRoute(item)
-                  ? 'bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20 font-semibold'
-                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-              ]"
-              @click="closeMobileSidebar"
-            >
-              <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
-                {{ item.icon }}
-              </span>
-              <span>{{ item.label }}</span>
-            </router-link>
+          <nav class="space-y-2">
+            <template v-for="item in adminMainNavItems" :key="item.name">
+              <router-link
+                v-if="item.isImplemented"
+                :to="item.to"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group"
+                :class="[
+                  isCurrentRoute(item)
+                    ? 'bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20 font-semibold'
+                    : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                ]"
+                @click="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </router-link>
 
-            <a
-              v-else
-              href="#"
-              class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-              @click.prevent="closeMobileSidebar"
-            >
-              <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
-                {{ item.icon }}
-              </span>
-              <span>{{ item.label }}</span>
-            </a>
-          </template>
-        </nav>
-      </div>
+              <a
+                v-else
+                href="#"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                @click.prevent="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </a>
+            </template>
+          </nav>
+        </div>
+
+        <!-- Sección Administración Stitch -->
+        <div>
+          <p class="px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50 mb-1">
+            Administración
+          </p>
+
+          <nav class="space-y-2">
+            <template v-for="item in adminSectionNavItems" :key="item.name">
+              <router-link
+                v-if="item.isImplemented"
+                :to="item.to"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group"
+                :class="[
+                  isCurrentRoute(item)
+                    ? 'bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20 font-semibold'
+                    : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                ]"
+                @click="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </router-link>
+
+              <a
+                v-else
+                href="#"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                @click.prevent="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </a>
+            </template>
+          </nav>
+        </div>
+      </template>
+
+      <!-- ==================================== -->
+      <!-- MENU PARA USUARIO ESTÁNDAR          -->
+      <!-- ==================================== -->
+      <template v-else>
+        <div>
+          <p class="px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50 mb-1">
+            Menú Principal
+          </p>
+
+          <nav class="space-y-2">
+            <template v-for="item in standardNavItems" :key="item.name">
+              <router-link
+                v-if="item.isImplemented"
+                :to="item.to"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group"
+                :class="[
+                  isCurrentRoute(item)
+                    ? 'bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20 font-semibold'
+                    : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                ]"
+                @click="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </router-link>
+
+              <a
+                v-else
+                href="#"
+                class="flex items-center px-4 py-3 rounded-lg font-medium text-sm transition-all group text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                @click.prevent="closeMobileSidebar"
+              >
+                <span class="material-symbols-outlined mr-4 group-hover:scale-110 transition-transform">
+                  {{ item.icon }}
+                </span>
+                <span>{{ item.label }}</span>
+              </a>
+            </template>
+          </nav>
+        </div>
+      </template>
+
     </div>
 
-    <!-- Enlace Configuración de Perfil (Stitch - No implementado todavía) -->
+    <!-- Enlace Configuración de Perfil (Stitch) -->
     <div class="px-4 py-3 border-t border-outline-variant/10">
       <a
         href="#"
@@ -179,7 +314,7 @@ function closeMobileSidebar() {
               {{ authStore.user?.nombre || 'Usuario' }}
             </p>
             <p class="text-xs text-on-surface-variant/70 truncate">
-              {{ authStore.user?.email || 'estandar@cinecraft.com' }}
+              {{ authStore.user?.email || 'admin@cinecraft.com' }}
             </p>
             <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-surface-container-high text-primary uppercase tracking-wider">
               ROL: {{ authStore.user?.role || 'estandar' }}

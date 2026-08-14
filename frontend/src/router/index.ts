@@ -35,7 +35,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     name: 'Admin',
-    component: () => import('@/views/AdminView.vue'),
+    component: () => import('@/views/AdminHomeView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
+    path: '/admin/reportes',
+    name: 'AdminReports',
+    component: () => import('@/views/AdminReportsView.vue'),
     meta: { requiresAuth: true, role: 'admin' },
   },
   {
@@ -63,7 +69,13 @@ router.beforeEach((to) => {
     return { name: 'Login' }
   }
 
-  // Si está autenticado e intenta ir a Login -> redirigir según su rol
+  if (
+    to.meta.requiresAdmin &&
+    authStore.user?.role?.toLowerCase() !== 'admin'
+  ) {
+    return { name: 'Home' }
+  }
+
   if (to.name === 'Login' && authStore.isAuthenticated) {
     return authStore.isAdmin ? { name: 'Admin' } : { name: 'Home' }
   }
