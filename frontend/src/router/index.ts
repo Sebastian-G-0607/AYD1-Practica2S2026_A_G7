@@ -45,6 +45,24 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, role: 'admin' },
   },
   {
+    path: '/shared-with-me',
+    name: 'SharedWithMe',
+    component: () => import('@/views/SharedWithMeView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+  {
+    path: '/my-shares',
+    name: 'MyShares',
+    component: () => import('@/views/MySharesView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/ProfileView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: () => {
       const authStore = useAuthStore()
@@ -54,21 +72,6 @@ const routes: RouteRecordRaw[] = [
       return { name: 'Login' }
     },
   },
-  {
-      path: '/shared-with-me',
-      name: 'SharedWithMe',
-      component: () => import('@/views/SharedWithMeView.vue')
-    },
-    {
-      path: '/my-shares',
-      name: 'MyShares',
-      component: () => import('@/views/MySharesView.vue')
-    },
-    {
-      path: '/profile',
-      name: 'Profile',
-      component: () => import('@/views/ProfileView.vue')
-    }
 ]
 
 const router = createRouter({

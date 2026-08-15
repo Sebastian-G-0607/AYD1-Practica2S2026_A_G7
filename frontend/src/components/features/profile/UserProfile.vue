@@ -1,22 +1,31 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth.store'
+import { getProfile, updateProfile } from '@/services/profile.service'
+
+const authStore = useAuthStore()
 
 const userProfile = reactive({
-  nombre: 'Eduardo Lau', 
-  usuario: '@arivera_cine',
-  correo: 'alex.rivera@cinecraft.app',
+  nombre: '',
+  usuario: '',
+  correo: '',
   contraseniaActual: '',
   nuevaContrasenia: '',
-  confirmarContrasenia: ''
+  confirmarContrasenia: '',
+  totalResenias: 0,
+  totalCompartidas: 0,
+  rol: 'estandar',
 })
 
-// Propiedad computada blindada para TypeScript
+const isLoading = ref(false)
+const isSaving = ref(false)
+const statusMessage = ref<{ type: 'success' | 'error'; text: string } | null>(null)
+
 const userInitials = computed(() => {
-  const nameStr = userProfile.nombre || ''
-  const names = nameStr.trim().split(/\s+/) // Separa por espacios
-  
+  const nameStr = userProfile.nombre || authStore.user?.nombre || ''
+  const names = nameStr.trim().split(/\s+/)
+
   if (names.length >= 2 && names[0] && names[1]) {
-    // Usamos charAt(0) que es 100% seguro para TypeScript
     return (names[0].charAt(0) + names[1].charAt(0)).toUpperCase()
   } else if (names.length >= 1 && names[0]) {
     return names[0].substring(0, 2).toUpperCase()
@@ -24,243 +33,347 @@ const userInitials = computed(() => {
   return 'U'
 })
 
-// Función para guardar y validar
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const loadUserData = async () => {
+  if (!authStore.user?.id) return
+
+  try {
+    isLoading.value = true
+    const profile = await getProfile(authStore.user.id)
+    userProfile.nombre = profile.nombre
+    userProfile.correo = profile.correo
+    userProfile.rol = profile.rol
+    userProfile.totalResenias = profile.totalResenias
+    userProfile.totalCompartidas = profile.totalCompartidas
+    
+    const firstName = (profile.nombre.trim().split(' ')[0] || 'usuario').toLowerCase()
+    userProfile.usuario = `@${firstName}_cine`
+  } catch (err: any) {
+    console.error('Error al cargar perfil:', err)
+    if (authStore.user) {
+      userProfile.nombre = authStore.user.nombre || ''
+      userProfile.correo = authStore.user.email || ''
+      userProfile.rol = authStore.user.role || 'estandar'
+      const firstName = (userProfile.nombre.trim().split(' ')[0] || 'usuario').toLowerCase()
+      userProfile.usuario = `@${firstName}_cine`
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadUserData()
+})
+
 const saveProfile = async () => {
-  if (userProfile.nuevaContrasenia && userProfile.nuevaContrasenia !== userProfile.confirmarContrasenia) {
-    alert('Las contraseñas nuevas no coinciden. Por favor, verifícalas.')
+  statusMessage.value = null
+
+  if (!userProfile.nombre.trim()) {
+    statusMessage.value = { type: 'error', text: 'El nombre completo es obligatorio.' }
     return
   }
 
-  if (userProfile.nuevaContrasenia || userProfile.correo !== 'alex.rivera@cinecraft.app') {
-    const isConfirmed = confirm('Estás a punto de cambiar datos críticos (correo o contraseña). ¿Deseas continuar?')
+  if (!userProfile.correo.trim()) {
+    statusMessage.value = { type: 'error', text: 'El correo electrónico es obligatorio.' }
+    return
+  }
+
+  if (!emailRegex.test(userProfile.correo.trim())) {
+    statusMessage.value = { type: 'error', text: 'Por favor ingresa un correo electrónico válido.' }
+    return
+  }
+
+  if (userProfile.nuevaContrasenia) {
+    if (userProfile.nuevaContrasenia.length < 6) {
+      statusMessage.value = {
+        type: 'error',
+        text: 'La nueva contraseña debe contener al menos 6 caracteres.',
+      }
+      return
+    }
+
+    if (!userProfile.contraseniaActual) {
+      statusMessage.value = {
+        type: 'error',
+        text: 'Debes ingresar tu contraseña actual para confirmar el cambio de contraseña.',
+      }
+      return
+    }
+
+    if (userProfile.nuevaContrasenia !== userProfile.confirmarContrasenia) {
+      statusMessage.value = {
+        type: 'error',
+        text: 'Las nuevas contraseñas no coinciden. Por favor verifícalas.',
+      }
+      return
+    }
+  }
+
+  const correoOriginal = authStore.user?.email || ''
+  const isChangingSensitiveData =
+    Boolean(userProfile.nuevaContrasenia) ||
+    userProfile.correo.trim().toLowerCase() !== correoOriginal.toLowerCase()
+
+  if (isChangingSensitiveData) {
+    const isConfirmed = confirm(
+      'Estás a punto de actualizar información crítica (correo electrónico o contraseña). ¿Deseas guardar los cambios?',
+    )
     if (!isConfirmed) return
   }
 
-  console.log('Guardando cambios del perfil en la BD...')
-  console.log('Payload:', {
-    nombre: userProfile.nombre,
-    usuario: userProfile.usuario,
-    correo: userProfile.correo,
-    nuevaContrasenia: userProfile.nuevaContrasenia ? userProfile.nuevaContrasenia : undefined
-  })
-  
-  alert('Perfil actualizado con éxito.')
-  
-  userProfile.contraseniaActual = ''
-  userProfile.nuevaContrasenia = ''
-  userProfile.confirmarContrasenia = ''
+  try {
+    isSaving.value = true
+    const payload = {
+      nombre: userProfile.nombre.trim(),
+      correo: userProfile.correo.trim(),
+      contraseniaActual: userProfile.contraseniaActual || undefined,
+      nuevaContrasenia: userProfile.nuevaContrasenia || undefined,
+    }
+
+    if (!authStore.user?.id) throw new Error('No hay sesión de usuario activa.')
+    const response = await updateProfile(authStore.user.id, payload)
+
+    authStore.updateUserProfile({
+      nombre: response.nombre || userProfile.nombre,
+      email: response.correo || userProfile.correo,
+    })
+
+    statusMessage.value = {
+      type: 'success',
+      text: response.mensaje || '¡Perfil de usuario actualizado exitosamente!',
+    }
+
+    userProfile.contraseniaActual = ''
+    userProfile.nuevaContrasenia = ''
+    userProfile.confirmarContrasenia = ''
+  } catch (error: any) {
+    console.error(error)
+    const mensaje =
+      error.response?.data?.mensaje ||
+      error.response?.data?.message ||
+      error.message ||
+      'Ocurrió un error al actualizar el perfil.'
+    statusMessage.value = { type: 'error', text: mensaje }
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
 <template>
-  <aside
-    class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col border-r border-outline-variant/10 shadow-2xl">
-    <div class="px-8 py-10 flex items-center gap-3"><span
-        class="material-symbols-outlined text-primary text-3xl">movie</span><span
-        class="font-headline-md text-headline-md tracking-tight text-on-surface uppercase">CineCraft</span></div>
-    <nav class="flex-1 px-4 space-y-2 overflow-y-auto"
-      data-active-classes="bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20">
-      <div class="px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50">
-        Menú Principal</div><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="dashboard" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-primary">dashboard</span>Panel</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="highlights" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-secondary-container">star</span>Destacados</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="archived" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">archive</span>Archivado</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="shared-with-me" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">group</span>Compartido Conmigo</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="my-shared" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">share</span>Mis Compartidos</a>
-      <div
-        class="pt-8 px-4 py-2 text-on-surface-variant font-label-md text-label-md uppercase tracking-widest opacity-50">
-        Administración</div><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="pending-requests" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-primary">pending_actions</span>Solicitudes
-        Pendientes</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="request-history" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">history</span>Historial de
-        Solicitudes</a><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="admin-reports" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">analytics</span>Reportes de
-        Administrador</a>
-    </nav>
-    <div class="px-4 py-6 border-t border-outline-variant/10"><a
-        class="flex items-center px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all group"
-        data-path="profile" href="#"><span
-          class="material-symbols-outlined mr-4 group-hover:text-on-surface">person</span>Configuración de Perfil</a>
+  <div class="space-y-8 max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col gap-2">
+      <h1 class="font-display-lg text-3xl md:text-4xl font-bold text-on-surface">
+        Configuración de Perfil
+      </h1>
+      <p class="font-body-lg text-on-surface-variant opacity-80 text-sm md:text-base">
+        Administra tus datos de cuenta, seguridad y preferencias de la plataforma.
+      </p>
     </div>
-  </aside>
-  <div class="pl-72 min-h-screen flex flex-col">
-    <header
-      class="fixed top-0 left-72 right-0 h-20 bg-surface/80 backdrop-blur-2xl z-40 px-8 flex items-center justify-between border-b border-outline-variant/5 shadow-sm">
-      <div class="flex-1 max-w-2xl relative group"><span
-          class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span><input
-          class="w-full bg-surface-container-high/50 border border-outline-variant/10 rounded-full py-2.5 pl-12 pr-6 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-md"
-          placeholder="Buscar películas, reseñas, o creadores..." type="text" /></div>
-      <div class="flex items-center gap-6"><button
-          class="relative p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant hover:text-on-surface"><span
-            class="material-symbols-outlined">notifications</span><span
-            class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span></button>
-        <div class="flex items-center gap-3 pl-4 border-l border-outline-variant/20 hover:cursor-pointer group">
-          <div class="text-right hidden sm:block">
-            <div class="text-label-md font-label-md text-on-surface">{{ userProfile.nombre }}</div>
-            <div class="text-caption font-caption text-on-surface-variant opacity-70">Crítico Pro</div>
+
+    <!-- Alert / Toast Banner -->
+    <div
+      v-if="statusMessage"
+      class="p-4 rounded-xl flex items-center gap-3 transition-all duration-300 shadow-md"
+      :class="
+        statusMessage.type === 'success'
+          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
+          : 'bg-red-500/10 border border-red-500/30 text-red-300'
+      "
+    >
+      <span class="material-symbols-outlined text-2xl shrink-0">
+        {{ statusMessage.type === 'success' ? 'check_circle' : 'error' }}
+      </span>
+      <p class="text-sm font-medium flex-1">{{ statusMessage.text }}</p>
+      <button
+        type="button"
+        @click="statusMessage = null"
+        class="text-xs opacity-70 hover:opacity-100 p-1"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="p-16 text-center text-on-surface-variant flex flex-col items-center gap-4">
+      <span class="material-symbols-outlined text-4xl animate-spin text-primary">sync</span>
+      <p>Cargando información del perfil...</p>
+    </div>
+
+    <!-- Content Grid -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Columna Izquierda: Tarjeta de Avatar y Estadísticas -->
+      <div class="md:col-span-1 flex flex-col gap-6">
+        <div
+          class="bg-surface-container rounded-2xl p-6 flex flex-col items-center gap-4 shadow-xl border border-outline-variant/10"
+        >
+          <div class="relative group">
+            <div
+              class="w-32 h-32 md:w-36 md:h-36 rounded-full bg-primary/20 text-primary flex items-center justify-center font-display-lg text-5xl font-bold shadow-xl transition-transform duration-300 group-hover:scale-105"
+            >
+              {{ userInitials }}
+            </div>
           </div>
-          <div
-            class="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-label-md text-label-md ring-2 ring-transparent group-hover:ring-primary transition-all">
-            {{ userInitials }}
+          <div class="text-center">
+            <h2 class="font-headline-md text-xl font-bold text-on-surface">
+              {{ userProfile.nombre || 'Usuario CineCraft' }}
+            </h2>
+            <p class="text-xs text-primary font-mono mt-1">
+              {{ userProfile.usuario }}
+            </p>
+            <span
+              class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-surface-container-high text-primary border border-primary/20"
+            >
+              ROL: {{ userProfile.rol || 'ESTÁNDAR' }}
+            </span>
           </div>
         </div>
-      </div>
-    </header>
-    <main class="flex-1 pt-20 bg-surface p-8">
-      <div class="flex flex-col w-full max-w-4xl mx-auto gap-8">
-        <div class="flex flex-col gap-2">
-          <h1 class="font-display-lg text-display-lg text-on-surface">Editar Perfil</h1>
-          <p class="font-body-lg text-body-lg text-on-surface-variant opacity-80">Administra tu identidad
-            cinematográfica y preferencias.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="md:col-span-1 flex flex-col gap-6">
-            <div
-              class="bg-surface-container rounded-xl p-6 flex flex-col items-center gap-4 shadow-lg border border-outline-variant/10">
-              <div class="relative group cursor-pointer">
-                <div
-                  class="w-40 h-40 rounded-full bg-primary/20 text-primary flex items-center justify-center font-display-lg text-6xl shadow-2xl transition-transform duration-300 group-hover:scale-105">
-                  {{ userInitials }}</div>
-                <div
-                  class="absolute inset-0 bg-background/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                  <span class="material-symbols-outlined text-on-surface text-3xl">photo_camera</span>
-                </div>
-              </div>
-              <div class="text-center">
-                <h2 class="font-headline-md text-headline-md text-on-surface">{{ userProfile.nombre }}</h2>
-                <p
-                  class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1 opacity-70">
-                  Crítico Pro</p>
-              </div>
-              <button
-                class="w-full mt-2 py-2 px-4 rounded-lg border border-outline-variant/30 text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors">
-                Subir Nueva Imagen
-              </button>
+
+        <!-- Estadísticas en vivo -->
+        <div
+          class="bg-surface-container rounded-2xl p-6 flex flex-col gap-4 shadow-xl border border-outline-variant/10"
+        >
+          <h3 class="font-headline-md text-base font-bold text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-xl">analytics</span>
+            Actividad en CineCraft
+          </h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col bg-surface-dim/40 p-4 rounded-xl border border-outline-variant/10">
+              <span class="text-3xl font-extrabold text-primary">{{ userProfile.totalResenias }}</span>
+              <span class="text-xs text-on-surface-variant uppercase tracking-wider opacity-70 mt-1">Reseñas</span>
             </div>
-            <div
-              class="bg-surface-container rounded-xl p-6 flex flex-col gap-4 shadow-lg border border-outline-variant/10">
-              <h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">local_movies</span>
-                Estadísticas
-              </h3>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="flex flex-col">
-                  <span class="font-display-lg text-display-lg text-primary">142</span>
-                  <span class="font-label-md text-label-md text-on-surface-variant uppercase opacity-70">Reseñas</span>
-                </div>
-                <div class="flex flex-col">
-                  <span class="font-display-lg text-display-lg text-secondary-container">89</span>
-                  <span class="font-label-md text-label-md text-on-surface-variant uppercase opacity-70">Listas</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="md:col-span-2 flex flex-col gap-6">
-            <div class="bg-surface-container rounded-xl p-8 shadow-lg border border-outline-variant/10">
-              <h3
-                class="font-headline-md text-headline-md text-on-surface mb-6 border-b border-outline-variant/20 pb-4">
-                Detalles Personales</h3>
-              <div class="flex flex-col gap-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="flex flex-col gap-2">
-                    <label class="font-label-md text-label-md text-on-surface-variant">Nombre Completo</label>
-                    <input
-                      v-model="userProfile.nombre"
-                      class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="text" />
-                  </div>
-                  <div class="flex flex-col gap-2">
-                    <label class="font-label-md text-label-md text-on-surface-variant">Nombre de Usuario</label>
-                    <input
-                      v-model="userProfile.usuario"
-                      class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="text" />
-                  </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                  <label class="font-label-md text-label-md text-on-surface-variant">Correo Electrónico</label>
-                  <input
-                    v-model="userProfile.correo"
-                    class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                    type="email" />
-                </div>
-                <h3
-                  class="font-headline-md text-headline-md text-on-surface mt-4 mb-2 border-b border-outline-variant/20 pb-4">
-                  Seguridad</h3>
-                <div class="flex flex-col gap-2">
-                  <label class="font-label-md text-label-md text-on-surface-variant">Contraseña Actual</label>
-                  <input
-                    v-model="userProfile.contraseniaActual"
-                    class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                    placeholder="••••••••" type="password" />
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="flex flex-col gap-2">
-                    <label class="font-label-md text-label-md text-on-surface-variant">Nueva Contraseña</label>
-                    <input
-                      v-model="userProfile.nuevaContrasenia"
-                      class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="password" />
-                  </div>
-                  <div class="flex flex-col gap-2">
-                    <label class="font-label-md text-label-md text-on-surface-variant">Confirmar Nueva Contraseña</label>
-                    <input
-                      v-model="userProfile.confirmarContrasenia"
-                      class="bg-surface-dim border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                      type="password" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-surface-container rounded-xl p-8 shadow-lg border border-outline-variant/10">
-              <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Géneros Favoritos</h3>
-              <p class="font-body-md text-body-md text-on-surface-variant opacity-70 mb-6">Selecciona los géneros que
-                definen tu gusto cinematográfico para mejorar las recomendaciones.</p>
-              <div class="flex flex-wrap gap-3">
-                <button
-                  class="px-4 py-2 rounded-full border border-primary bg-primary/10 text-primary font-label-md text-label-md transition-colors hover:bg-primary/20">Ciencia
-                  Ficción</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-primary bg-primary/10 text-primary font-label-md text-label-md transition-colors hover:bg-primary/20">Neo-Noir</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md transition-colors hover:border-on-surface hover:text-on-surface">Suspense</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-primary bg-primary/10 text-primary font-label-md text-label-md transition-colors hover:bg-primary/20">Cine
-                  de Autor</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md transition-colors hover:border-on-surface hover:text-on-surface">Terror</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md transition-colors hover:border-on-surface hover:text-on-surface">Documental</button>
-                <button
-                  class="px-4 py-2 rounded-full border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md transition-colors hover:border-on-surface hover:text-on-surface">Acción</button>
-              </div>
-            </div>
-            <div class="flex justify-end pt-4 pb-12">
-              <button
-                @click="saveProfile"
-                class="bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md px-8 py-4 rounded-lg shadow-lg shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1">
-                Guardar Cambios
-              </button>
+            <div class="flex flex-col bg-surface-dim/40 p-4 rounded-xl border border-outline-variant/10">
+              <span class="text-3xl font-extrabold text-secondary-container">{{ userProfile.totalCompartidas }}</span>
+              <span class="text-xs text-on-surface-variant uppercase tracking-wider opacity-70 mt-1">Compartidas</span>
             </div>
           </div>
         </div>
       </div>
-    </main>
+
+      <!-- Columna Derecha: Formularios de Edición -->
+      <div class="md:col-span-2 flex flex-col gap-6">
+        <!-- Datos Personales -->
+        <div class="bg-surface-container rounded-2xl p-6 md:p-8 shadow-xl border border-outline-variant/10 space-y-6">
+          <div class="border-b border-outline-variant/10 pb-4">
+            <h3 class="font-headline-md text-lg font-bold text-on-surface">
+              Información de la Cuenta
+            </h3>
+            <p class="text-xs text-on-surface-variant opacity-70 mt-1">
+              Actualiza tu nombre visible y tu dirección de correo electrónico vinculada.
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Nombre Completo <span class="text-primary">*</span>
+                </label>
+                <input
+                  v-model="userProfile.nombre"
+                  type="text"
+                  placeholder="Tu nombre completo"
+                  class="bg-surface-dim border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm"
+                />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Alias en Plataforma
+                </label>
+                <input
+                  v-model="userProfile.usuario"
+                  type="text"
+                  disabled
+                  class="bg-surface-dim/50 border border-outline-variant/10 rounded-xl px-4 py-3 text-on-surface-variant/70 font-mono text-sm cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                Correo Electrónico <span class="text-primary">*</span>
+              </label>
+              <input
+                v-model="userProfile.correo"
+                type="email"
+                placeholder="tu.correo@ejemplo.com"
+                class="bg-surface-dim border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Seguridad y Contraseña -->
+        <div class="bg-surface-container rounded-2xl p-6 md:p-8 shadow-xl border border-outline-variant/10 space-y-6">
+          <div class="border-b border-outline-variant/10 pb-4">
+            <h3 class="font-headline-md text-lg font-bold text-on-surface flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-xl">lock</span>
+              Seguridad y Cambio de Contraseña
+            </h3>
+            <p class="text-xs text-on-surface-variant opacity-70 mt-1">
+              Deja estos campos en blanco si no deseas cambiar tu contraseña actual.
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex flex-col gap-2">
+              <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                Contraseña Actual
+              </label>
+              <input
+                v-model="userProfile.contraseniaActual"
+                type="password"
+                placeholder="••••••••"
+                class="bg-surface-dim border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Nueva Contraseña
+                </label>
+                <input
+                  v-model="userProfile.nuevaContrasenia"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  class="bg-surface-dim border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm"
+                />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label class="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Confirmar Nueva Contraseña
+                </label>
+                <input
+                  v-model="userProfile.confirmarContrasenia"
+                  type="password"
+                  placeholder="Repite la nueva contraseña"
+                  class="bg-surface-dim border border-outline-variant/20 rounded-xl px-4 py-3 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Guardar -->
+        <div class="flex justify-end pt-2 pb-6">
+          <button
+            @click="saveProfile"
+            :disabled="isSaving"
+            type="button"
+            class="bg-primary hover:bg-primary-container text-on-primary font-label-md font-semibold px-8 py-3.5 rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <span v-if="isSaving" class="material-symbols-outlined text-sm animate-spin">sync</span>
+            <span v-else class="material-symbols-outlined text-sm">save</span>
+            <span>{{ isSaving ? 'Guardando cambios...' : 'Guardar Cambios' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

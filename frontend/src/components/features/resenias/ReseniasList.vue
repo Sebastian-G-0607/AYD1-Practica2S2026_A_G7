@@ -6,10 +6,40 @@ import {
   deleteResenia,
 } from '@/services/resenia.service'
 import type { Resenia } from '@/types/resenia.types'
+import ShareReviewModal from '@/components/features/shares/ShareReviewModal.vue'
+import { useShares } from '@/composables/useShares'
 
 const resenias = ref<Resenia[]>([])
 const loading = ref(true)
 const error = ref('')
+
+const { shareReviewBatch } = useShares()
+const reseniaACompartir = ref<Resenia | null>(null)
+const modalCompartirAbierto = ref(false)
+
+function abrirModalCompartir(resenia: Resenia) {
+  reseniaACompartir.value = resenia
+  modalCompartirAbierto.value = true
+}
+
+function cerrarModalCompartir() {
+  modalCompartirAbierto.value = false
+  reseniaACompartir.value = null
+}
+
+async function handleShareSubmit(payload: { reseniaId: number; userIds: number[] }) {
+  try {
+    const res = await shareReviewBatch(payload.reseniaId, payload.userIds)
+    alert(res.mensaje || '¡Reseña compartida con éxito!')
+    cerrarModalCompartir()
+  } catch (err: any) {
+    const msg =
+      err.response?.data?.mensaje ||
+      err.response?.data?.message ||
+      'Ocurrió un error al compartir la reseña.'
+    alert(msg)
+  }
+}
 
 // =========================
 // EDICIÓN
@@ -228,21 +258,32 @@ onMounted(() => {
               </span>
 
               <!-- Acciones -->
-              <div class="mt-4 flex items-center gap-5">
+              <div class="mt-4 flex items-center gap-5 flex-wrap">
                 <button
                   type="button"
-                  class="text-sm font-semibold text-primary hover:underline"
+                  class="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
                   @click="iniciarEdicion(resenia)"
                 >
-                  Editar reseña
+                  <span class="material-symbols-outlined text-sm">edit</span>
+                  Editar
                 </button>
 
                 <button
                   type="button"
-                  class="text-sm font-semibold text-red-400 hover:text-red-300 hover:underline transition-colors"
+                  class="text-sm font-semibold text-secondary-container hover:underline flex items-center gap-1"
+                  @click="abrirModalCompartir(resenia)"
+                >
+                  <span class="material-symbols-outlined text-sm">share</span>
+                  Compartir
+                </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-red-400 hover:text-red-300 hover:underline transition-colors flex items-center gap-1"
                   @click="abrirModalEliminar(resenia)"
                 >
-                  Eliminar reseña
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                  Eliminar
                 </button>
               </div>
             </div>
@@ -484,5 +525,15 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Modal Compartir Reseña -->
+    <ShareReviewModal
+      v-if="reseniaACompartir"
+      :is-open="modalCompartirAbierto"
+      :resenia-id="reseniaACompartir.id"
+      :resenia-title="reseniaACompartir.tituloPelicula"
+      @close="cerrarModalCompartir"
+      @share="handleShareSubmit"
+    />
   </section>
 </template>

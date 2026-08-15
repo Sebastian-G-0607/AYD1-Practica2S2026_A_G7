@@ -34,6 +34,7 @@ public static class LoginEndpoint
 
             return Results.Ok(new LoginResponseDto(
                 Token: token,
+                Id: usuario.Id,
                 Email: usuario.Correo,
                 Nombre: usuario.Nombre,
                 Role: rolNombre,

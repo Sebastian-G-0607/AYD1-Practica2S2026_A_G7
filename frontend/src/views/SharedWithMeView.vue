@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import SharedWithMeList from '@/components/features/shares/SharedWithMeList.vue'
+import MainLayout from '@/layouts/MainLayout.vue'
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface font-body-md text-on-surface dark">
+  <MainLayout>
     <SharedWithMeList />
-  </div>
+  </MainLayout>
 </template>

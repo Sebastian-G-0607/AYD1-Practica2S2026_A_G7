@@ -1,4 +1,13 @@
 namespace CineCraft.Api.Features.Shares.ShareReview;
 
-// Objeto que recibiremos desde el Frontend
-public record ShareReviewRequest(int ReseniaId, int UsuarioRemitenteId, int UsuarioDestinatarioId);
+public record ShareReviewRequest(
+    int ReseniaId, 
+    int? UsuarioRemitenteId, 
+    int UsuarioDestinatarioId
+);
+
+public record ShareReviewBatchRequest(
+    int ReseniaId,
+    int? UsuarioRemitenteId,
+    List<int> DestinatariosIds
+);
