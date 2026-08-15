@@ -25,16 +25,16 @@ public static class ProcesarSolicitudEndpoint
                 return Results.NotFound(new { message = "Solicitud no encontrada." });
             }
 
-            if (solicitud.Status?.Descripcion.ToLower() != "pendiente")
+            if (solicitud.Status?.Descripcion != "pendiente")
             {
                 return Results.BadRequest(new { message = "La solicitud ya fue procesada." });
             }
 
             var statusAprobado = await dbContext.SolicitudStatuses
-                .FirstOrDefaultAsync(s => s.Descripcion.ToLower() == "aprobada");
+                .FirstOrDefaultAsync(s => s.Descripcion== "Aprobado");
 
             var statusRechazado = await dbContext.SolicitudStatuses
-                .FirstOrDefaultAsync(s => s.Descripcion.ToLower() == "rechazada");
+                .FirstOrDefaultAsync(s => s.Descripcion == "Rechazado");
 
             if (statusAprobado is null || statusRechazado is null)
             {
@@ -54,7 +54,7 @@ public static class ProcesarSolicitudEndpoint
                 }
 
                 var rolUsuario = await dbContext.Roles
-                    .FirstOrDefaultAsync(r => r.Descripcion.ToLower() == "usuario");
+                    .FirstOrDefaultAsync(r => r.Nombre == "estandar");
 
                 if (rolUsuario is null)
                 {
