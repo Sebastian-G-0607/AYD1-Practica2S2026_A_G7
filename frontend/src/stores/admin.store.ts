@@ -13,8 +13,11 @@ export const useAdminStore = defineStore('admin', () => {
     loading.value = true
     error.value = null
     try {
+      console.log('Fetching pending requests------------------------------------')
       pendingRequests.value = await adminService.getPendientes()
+      console.log('Response:', pendingRequests.value)
     } catch (e: any) {
+      console.log('Error completo:',e)
       error.value = e.response?.data?.message || 'Error al cargar solicitudes pendientes'
       console.error('Error fetching pending requests:', e)
     } finally {
