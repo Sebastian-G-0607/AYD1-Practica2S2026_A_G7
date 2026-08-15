@@ -23,6 +23,7 @@ public class SmtpEmailService : IEmailService
 
         var body = $@"
             <html>
+            
             <body style='font-family: Arial, sans-serif;'>
                 <h1 style='color: #2c3e50;'>Bienvenido a CineCraft</h1>
                 <p>Hola <strong>{userName}</strong>,</p>
