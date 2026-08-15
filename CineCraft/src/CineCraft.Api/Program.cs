@@ -73,6 +73,9 @@ builder.AddCineCraftCors();
 
 builder.Services.AddValidation();
 
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 var app = builder.Build();
 
 app.UseCors();
@@ -83,6 +86,7 @@ app.UseAuthorization();
 app.MapDefaultEndpoints();
 app.MapAuth();
 app.MapSolicitudes();
+app.MapAdminSolicitudes();
 app.MapReportes();
 app.MapResenias();
 
