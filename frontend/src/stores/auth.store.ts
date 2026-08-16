@@ -43,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Persistir en localStorage
       localStorage.setItem(TOKEN_KEY, response.token)
       const userData: AuthUser = {
+        id: response.id,
         email: response.email,
         nombre: response.nombre,
         role: response.role,
@@ -80,6 +81,17 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
+  function updateUserProfile(updated: { nombre: string; email: string }): void {
+    if (user.value) {
+      user.value = {
+        ...user.value,
+        nombre: updated.nombre,
+        email: updated.email,
+      }
+      localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    }
+  }
+
   function clearError(): void {
     error.value = null
   }
@@ -95,6 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
     isEstandar,
     login,
     logout,
+    updateUserProfile,
     clearError,
   }
 })

@@ -5,6 +5,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string
+  id: number
   email: string
   nombre: string
   role: string
@@ -12,8 +13,10 @@ export interface LoginResponse {
 }
 
 export interface AuthUser {
+  id: number
   email: string
   nombre: string
   role: string
   expiresAt: string
 }
+

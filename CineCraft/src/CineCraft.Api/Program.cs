@@ -12,6 +12,8 @@ using CineCraft.Api.Shared.Database;
 using CineCraft.Api.Shared.ErrorHandling;
 using CineCraft.Api.Shared.OpenApi;
 using Microsoft.AspNetCore.HttpLogging;
+using CineCraft.Api.Features.Shares;
+using CineCraft.Api.Features.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +93,8 @@ app.MapSolicitudes();
 app.MapAdminSolicitudes();
 app.MapReportes();
 app.MapResenias();
+app.MapShares();
+app.MapUsers();
 
 app.UseHttpLogging();
 
