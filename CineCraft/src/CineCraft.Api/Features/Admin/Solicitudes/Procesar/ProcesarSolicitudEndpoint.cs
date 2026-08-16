@@ -25,20 +25,20 @@ public static class ProcesarSolicitudEndpoint
                 return Results.NotFound(new { message = "Solicitud no encontrada." });
             }
 
-            if (solicitud.Status?.Descripcion != "pendiente")
+            if (solicitud.Status?.Descripcion?.ToLower() != "pendiente")
             {
                 return Results.BadRequest(new { message = "La solicitud ya fue procesada." });
             }
 
             var statusAprobado = await dbContext.SolicitudStatuses
-                .FirstOrDefaultAsync(s => s.Descripcion== "Aprobado");
+                .FirstOrDefaultAsync(s => s.Descripcion.ToLower() == "aprobado");
 
             var statusRechazado = await dbContext.SolicitudStatuses
-                .FirstOrDefaultAsync(s => s.Descripcion == "Rechazado");
+                .FirstOrDefaultAsync(s => s.Descripcion.ToLower() == "rechazado");
 
             if (statusAprobado is null || statusRechazado is null)
             {
-                logger.LogError("Los estados 'Aprobada' o 'Rechazada' no existen en la base de datos.");
+                logger.LogError("Los estados 'Aprobado' o 'Rechazado' no existen en la base de datos.");
                 return Results.Problem("Los estados necesarios no existen en el sistema.");
             }
 
@@ -54,11 +54,11 @@ public static class ProcesarSolicitudEndpoint
                 }
 
                 var rolUsuario = await dbContext.Roles
-                    .FirstOrDefaultAsync(r => r.Nombre == "estandar");
+                    .FirstOrDefaultAsync(r => r.Nombre.ToLower() == "estandar");
 
                 if (rolUsuario is null)
                 {
-                    logger.LogError("El rol 'Usuario' no existe en la base de datos.");
+                    logger.LogError("El rol 'estandar' no existe en la base de datos.");
                     return Results.Problem("El rol de usuario no existe en el sistema.");
                 }
 
@@ -77,7 +77,14 @@ public static class ProcesarSolicitudEndpoint
 
                 await dbContext.SaveChangesAsync();
 
-                await emailService.SendApprovalEmail(solicitud.Correo, solicitud.Nombre);
+                try
+                {
+                    await emailService.SendApprovalEmail(solicitud.Correo, solicitud.Nombre);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Solicitud {SolicitudId} aprobada y usuario creado, pero falló el envío del correo de confirmación a {Correo}.", solicitud.Id, solicitud.Correo);
+                }
 
                 logger.LogInformation("Solicitud {SolicitudId} aprobada. Usuario {UsuarioId} creado.", 
                     solicitud.Id, nuevoUsuario.Id);
@@ -100,7 +107,14 @@ public static class ProcesarSolicitudEndpoint
 
                 await dbContext.SaveChangesAsync();
 
-                await emailService.SendRejectionEmail(solicitud.Correo, solicitud.Nombre, request.MotivoRechazo);
+                try
+                {
+                    await emailService.SendRejectionEmail(solicitud.Correo, solicitud.Nombre, request.MotivoRechazo);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Solicitud {SolicitudId} rechazada, pero falló el envío del correo de rechazo a {Correo}.", solicitud.Id, solicitud.Correo);
+                }
 
                 logger.LogInformation("Solicitud {SolicitudId} rechazada. Motivo: {Motivo}", 
                     solicitud.Id, request.MotivoRechazo);
