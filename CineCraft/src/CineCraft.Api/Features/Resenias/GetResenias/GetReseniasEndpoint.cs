@@ -13,19 +13,15 @@ public static class GetReseniasEndpoint
             CineCraftContext dbContext) =>
         {
             var userIdClaim = httpContext.User
-                .FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+                .FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
 
             if (!int.TryParse(userIdClaim, out var userId))
             {
                 return Results.Unauthorized();
             }
-
             var resenias = await dbContext.Resenias
                 .AsNoTracking()
-                .Where(r =>
-                    r.UsuarioAutorId == userId &&
-                    !r.Deleted &&
-                    !r.Archivada)
+                .Where(r => r.UsuarioAutorId == userId && !r.Deleted && !r.Archivada)
                 .Select(r => new ReseniaDto(
                     r.Id,
                     r.TituloPelicula,
@@ -33,7 +29,8 @@ public static class GetReseniasEndpoint
                     r.Comentario,
                     r.EtiquetaId,
                     r.Etiqueta!.Descripcion,
-                    r.Destacada
+                    r.Destacada,
+                    r.Archivada
                 ))
                 .ToListAsync();
 

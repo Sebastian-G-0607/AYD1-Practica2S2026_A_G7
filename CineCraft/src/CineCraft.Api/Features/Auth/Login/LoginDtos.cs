@@ -9,6 +9,7 @@ public record LoginRequestDto(
 
 public record LoginResponseDto(
     string Token,
+    int Id,
     string Email,
     string Nombre,
     string Role,

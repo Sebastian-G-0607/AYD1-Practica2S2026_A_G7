@@ -7,5 +7,6 @@ public record ReseniaDto(
     string? Comentario,
     int EtiquetaId,
     string Etiqueta,
-    bool Destacada
+    bool Destacada,
+    bool Archivada
 );

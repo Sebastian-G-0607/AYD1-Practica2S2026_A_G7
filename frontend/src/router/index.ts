@@ -32,6 +32,21 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
     meta: { requiresAuth: true, role: 'estandar' },
   },
+
+  {
+    path: '/archivadas',
+    name: 'Archivadas',
+    component: () => import('@/views/ArchivadasView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+
+    {
+    path: '/destacadas',
+    name: 'Destacadas',
+    component: () => import('@/views/DestacadasView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+
   {
     path: '/admin',
     name: 'Admin',
@@ -43,6 +58,36 @@ const routes: RouteRecordRaw[] = [
     name: 'AdminReports',
     component: () => import('@/views/AdminReportsView.vue'),
     meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
+    path: '/admin/solicitudes',
+    name: 'AdminRequests',
+    component: () => import('@/views/AdminRequestsView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
+    path: '/admin/historial',
+    name: 'AdminHistory',
+    component: () => import('@/views/AdminHistoryView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
+    path: '/shared-with-me',
+    name: 'SharedWithMe',
+    component: () => import('@/views/SharedWithMeView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+  {
+    path: '/my-shares',
+    name: 'MyShares',
+    component: () => import('@/views/MySharesView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/ProfileView.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/:pathMatch(.*)*',
