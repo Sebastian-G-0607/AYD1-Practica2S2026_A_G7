@@ -1,8 +1,14 @@
 import { httpClient } from '@/services/http.client'
-import type { Resenia, ReseniaRequest } from '@/types/resenia.types'
+import type { Resenia, ReseniaRequest, ToggleResponse } from '@/types/resenia.types'
+
 
 export async function getResenias(): Promise<Resenia[]> {
   const response = await httpClient.get<Resenia[]>('/api/resenias')
+  return response.data
+}
+
+export async function getReseniasArchivadas(): Promise<Resenia[]> {
+  const response = await httpClient.get<Resenia[]>('/api/resenias/archivadas')
   return response.data
 }
 
@@ -22,3 +28,14 @@ export async function updateResenia(
 export async function deleteResenia(id: number): Promise<void> {
   await httpClient.delete(`/api/resenias/${id}`)
 }
+
+export async function toggleDestacar(id: number): Promise<ToggleResponse> {
+  const response = await httpClient.patch<ToggleResponse>(`/api/resenias/${id}/destacar`)
+  return response.data
+}
+
+export async function toggleArchivarResenia(id: number): Promise<ToggleResponse> {
+  const response = await httpClient.patch<ToggleResponse>(`/api/resenias/${id}/archivar`)
+  return response.data
+}
+export const toggleArchivar = toggleArchivarResenia

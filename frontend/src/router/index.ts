@@ -32,6 +32,21 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
     meta: { requiresAuth: true, role: 'estandar' },
   },
+
+  {
+    path: '/archivadas',
+    name: 'Archivadas',
+    component: () => import('@/views/ArchivadasView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+
+    {
+    path: '/destacadas',
+    name: 'Destacadas',
+    component: () => import('@/views/DestacadasView.vue'),
+    meta: { requiresAuth: true, role: 'estandar' },
+  },
+
   {
     path: '/admin',
     name: 'Admin',

@@ -4,6 +4,8 @@ import {
   getResenias,
   updateResenia,
   deleteResenia,
+  toggleArchivarResenia,
+  toggleDestacar
 } from '@/services/resenia.service'
 import type { Resenia } from '@/types/resenia.types'
 import ShareReviewModal from '@/components/features/shares/ShareReviewModal.vue'
@@ -12,6 +14,7 @@ import { useShares } from '@/composables/useShares'
 const resenias = ref<Resenia[]>([])
 const loading = ref(true)
 const error = ref('')
+const emit = defineEmits(['cambioEstado'])
 
 const { shareReviewBatch } = useShares()
 const reseniaACompartir = ref<Resenia | null>(null)
@@ -80,6 +83,34 @@ async function cargarResenias() {
     error.value = 'No fue posible cargar las reseñas.'
   } finally {
     loading.value = false
+  }
+}
+
+// =========================
+// ARCHIVAR RESEÑA
+// =========================
+
+async function archivar(id: number) {
+  try {
+    await toggleArchivarResenia(id)
+    await cargarResenias()
+  } catch (err) {
+    console.error(err)
+    error.value = 'No fue posible archivar la reseña.'
+  }
+}
+
+// =========================
+// DESTACAR RESEÑA
+// =========================
+async function destacar(id: number) {
+  try {
+    await toggleDestacar(id)
+    await cargarResenias()
+    emit('cambioEstado') // Avisa al componente padre que algo cambió
+  } catch (err) {
+    console.error(err)
+    error.value = 'No fue posible destacar la reseña.'
   }
 }
 
@@ -275,6 +306,25 @@ onMounted(() => {
                 >
                   <span class="material-symbols-outlined text-sm">share</span>
                   Compartir
+                </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold transition-colors flex items-center gap-1"
+                  :class="resenia.destacada ? 'text-yellow-400 hover:text-yellow-300' : 'text-on-surface/50 hover:text-on-surface'"
+                  @click="destacar(resenia.id)"
+                >
+                  <span class="material-symbols-outlined text-sm">{{ resenia.destacada ? 'star' : 'star_outline' }}</span>
+                  {{ resenia.destacada ? 'Quitar destacado' : 'Destacar' }}
+                </button>
+
+                <button
+                  type="button"
+                  class="text-sm font-semibold text-amber-400 hover:text-amber-300 hover:underline transition-colors flex items-center gap-1"
+                  @click="archivar(resenia.id)"
+                >
+                  <span class="material-symbols-outlined text-sm">archive</span>
+                  Archivar
                 </button>
 
                 <button

@@ -6,6 +6,7 @@ export interface Resenia {
   etiquetaId: number
   etiqueta: string
   destacada: boolean
+  archivada: boolean
 }
 
 export interface ReseniaRequest {
@@ -14,4 +15,11 @@ export interface ReseniaRequest {
   comentario: string | null
   etiquetaId: number | null
   nuevaEtiqueta: string | null
+}
+
+export interface ToggleResponse {
+  id: number
+  destacada?: boolean
+  archivada?: boolean
+  message: string
 }

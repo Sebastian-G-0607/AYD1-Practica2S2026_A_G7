@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import MainLayout from '@/layouts/MainLayout.vue'
 import ReseniasList from '@/components/features/resenias/ReseniasList.vue'
 import ReseniaForm from '@/components/features/resenias/ReseniaForm.vue'
+import ReseniasDestacadas from '@/components/features/resenias/ReseniasDestacadas.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -99,6 +100,8 @@ function handleReseniaCreated() {
         </div>
       </div>
     </section>
+
+    <ReseniasDestacadas />
 
     <!-- Sección Mis Reseñas (Contenido actual de HomeView) -->
     <section class="bg-surface-container-low border border-surface-bright/50 rounded-2xl p-6 md:p-8 shadow-xl">

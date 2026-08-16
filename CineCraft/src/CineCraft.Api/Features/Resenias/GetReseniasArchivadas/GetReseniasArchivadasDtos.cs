@@ -1,6 +1,7 @@
-namespace CineCraft.Api.Features.Resenias.GetResenias;
 
-public record ReseniaDto(
+namespace CineCraft.Api.Features.Resenias.GetReseniasArchivadas;
+
+public record ReseniaArchivadaDto(
     int Id,
     string TituloPelicula,
     int Calificacion,

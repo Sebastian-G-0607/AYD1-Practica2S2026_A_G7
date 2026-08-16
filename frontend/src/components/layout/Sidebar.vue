@@ -39,16 +39,16 @@ const standardNavItems: NavItem[] = [
   {
     name: 'Destacados',
     label: 'Destacados',
-    to: '#',
+    to: '/destacadas',
     icon: 'star',
-    isImplemented: false,
+    isImplemented: true,
   },
   {
     name: 'Archivados',
     label: 'Archivados',
-    to: '#',
+    to: '/archivadas',
     icon: 'archive',
-    isImplemented: false,
+    isImplemented: true,
   },
   {
     name: 'CompartidosConmigo',
