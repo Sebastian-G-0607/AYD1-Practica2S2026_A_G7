@@ -25,3 +25,17 @@ export interface ValidationProblemDetails {
   errors: Record<string, string[]>
   traceId?: string
 }
+export interface Solicitud {
+  id: number
+  nombre: string
+  correo: string
+  fecha_solicitud: string
+  status: string
+  motivo_rechazo?: string
+}
+
+export interface ProcesarSolicitudRequest {
+  solicitud_id: number
+  aprobar: boolean
+  motivo_rechazo?: string
+}

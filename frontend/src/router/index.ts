@@ -60,6 +60,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, role: 'admin' },
   },
   {
+    path: '/admin/solicitudes',
+    name: 'AdminRequests',
+    component: () => import('@/views/AdminRequestsView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
+    path: '/admin/historial',
+    name: 'AdminHistory',
+    component: () => import('@/views/AdminHistoryView.vue'),
+    meta: { requiresAuth: true, role: 'admin' },
+  },
+  {
     path: '/shared-with-me',
     name: 'SharedWithMe',
     component: () => import('@/views/SharedWithMeView.vue'),

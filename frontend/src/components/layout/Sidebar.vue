@@ -82,16 +82,16 @@ const adminSectionNavItems: NavItem[] = [
   {
     name: 'PendingRequests',
     label: 'Solicitudes Pendientes',
-    to: '#',
+    to: '/admin/solicitudes',
     icon: 'pending_actions',
-    isImplemented: false,
+    isImplemented: true,
   },
   {
     name: 'RequestHistory',
     label: 'Historial de Solicitudes',
-    to: '#',
+    to: '/admin/historial',
     icon: 'history',
-    isImplemented: false,
+    isImplemented: true,
   },
   {
     name: 'AdminReports',

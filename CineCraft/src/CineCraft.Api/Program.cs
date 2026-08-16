@@ -3,7 +3,9 @@ using CineCraft.Api.Data;
 using CineCraft.Api.Features.Auth;
 using CineCraft.Api.Features.Reportes;
 using CineCraft.Api.Features.Solicitudes;
+using CineCraft.Api.Features.Admin.Solicitudes;
 using CineCraft.Api.Features.Resenias;
+using CineCraft.Api.Services;
 using CineCraft.Api.Shared.Authentication;
 using CineCraft.Api.Shared.Cors;
 using CineCraft.Api.Shared.Database;
@@ -75,6 +77,9 @@ builder.AddCineCraftCors();
 
 builder.Services.AddValidation();
 
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+
 var app = builder.Build();
 
 app.UseCors();
@@ -85,6 +90,7 @@ app.UseAuthorization();
 app.MapDefaultEndpoints();
 app.MapAuth();
 app.MapSolicitudes();
+app.MapAdminSolicitudes();
 app.MapReportes();
 app.MapResenias();
 app.MapShares();

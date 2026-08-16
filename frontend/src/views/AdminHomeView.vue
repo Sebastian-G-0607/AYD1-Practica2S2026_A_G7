@@ -9,6 +9,14 @@ const authStore = useAuthStore()
 const irAReportes = () => {
   router.push('/admin/reportes')
 }
+
+const irASolicitudes = () => {
+  router.push('/admin/solicitudes')
+}
+
+const irAHistorial = () => {
+  router.push('/admin/historial')
+}
 </script>
 
 <template>
@@ -36,16 +44,17 @@ const irAReportes = () => {
     <!-- Módulos de Administración Stitch -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      <!-- Módulo 1: Solicitudes Pendientes (No implementado) -->
+      <!-- Módulo 1: Solicitudes Pendientes -->
       <article
-        class="bg-surface-container rounded-xl p-6 border border-outline-variant/10 shadow-md hover:border-outline-variant/30 transition-all flex flex-col justify-between group"
+        class="bg-surface-container rounded-xl p-6 border border-primary/30 shadow-xl hover:border-primary/60 transition-all flex flex-col justify-between cursor-pointer group hover:-translate-y-1"
+        @click="irASolicitudes"
       >
         <div>
-          <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-4 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-[28px] text-primary">pending_actions</span>
+          <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-[28px]">pending_actions</span>
           </div>
 
-          <h3 class="text-xl font-bold font-headline-md text-on-surface mb-2">
+          <h3 class="text-xl font-bold font-headline-md text-on-surface mb-2 group-hover:text-primary transition-colors">
             Solicitudes Pendientes
           </h3>
 
@@ -55,21 +64,27 @@ const irAReportes = () => {
         </div>
 
         <div class="mt-6 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
-          <span class="text-xs text-on-surface-variant opacity-60">Próximamente</span>
-          <span class="material-symbols-outlined text-on-surface-variant opacity-40">chevron_right</span>
+          <button
+            type="button"
+            class="px-5 py-2.5 rounded-full bg-primary-container text-on-primary-container font-semibold text-sm shadow-md hover:bg-primary transition-colors flex items-center gap-2"
+          >
+            <span>Ver solicitudes</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
         </div>
       </article>
 
-      <!-- Módulo 2: Historial de Solicitudes (No implementado) -->
+      <!-- Módulo 2: Historial de Solicitudes -->
       <article
-        class="bg-surface-container rounded-xl p-6 border border-outline-variant/10 shadow-md hover:border-outline-variant/30 transition-all flex flex-col justify-between group"
+        class="bg-surface-container rounded-xl p-6 border border-secondary/30 shadow-xl hover:border-secondary/60 transition-all flex flex-col justify-between cursor-pointer group hover:-translate-y-1"
+        @click="irAHistorial"
       >
         <div>
-          <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-4 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-[28px] text-secondary">history</span>
+          <div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary mb-4 group-hover:scale-110 transition-transform">
+            <span class="material-symbols-outlined text-[28px]">history</span>
           </div>
 
-          <h3 class="text-xl font-bold font-headline-md text-on-surface mb-2">
+          <h3 class="text-xl font-bold font-headline-md text-on-surface mb-2 group-hover:text-secondary transition-colors">
             Historial de Solicitudes
           </h3>
 
@@ -79,12 +94,17 @@ const irAReportes = () => {
         </div>
 
         <div class="mt-6 pt-4 border-t border-outline-variant/10 flex items-center justify-between">
-          <span class="text-xs text-on-surface-variant opacity-60">Próximamente</span>
-          <span class="material-symbols-outlined text-on-surface-variant opacity-40">chevron_right</span>
+          <button
+            type="button"
+            class="px-5 py-2.5 rounded-full bg-secondary-container text-on-secondary-container font-semibold text-sm shadow-md hover:bg-secondary transition-colors flex items-center gap-2"
+          >
+            <span>Ver historial</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
         </div>
       </article>
 
-      <!-- Módulo 3: Reportes Estadísticos (Implementado Stitch) -->
+      <!-- Módulo 3: Reportes Estadísticos -->
       <article
         class="bg-surface-container rounded-xl p-6 border border-primary/30 shadow-xl hover:border-primary/60 transition-all flex flex-col justify-between cursor-pointer group hover:-translate-y-1"
         @click="irAReportes"
