@@ -52,18 +52,24 @@ function handleLogout() {
       <div class="h-8 w-px bg-outline-variant/20 hidden sm:block" />
 
       <div class="flex items-center gap-3">
-        <div class="text-right hidden sm:block">
-          <p class="text-xs md:text-sm font-semibold text-on-surface leading-tight">
-            {{ authStore.user?.nombre || 'Usuario' }}
-          </p>
-          <p class="text-[11px] text-primary font-medium capitalize">
-            ROL: {{ authStore.user?.role || 'estandar' }}
-          </p>
-        </div>
+        <router-link
+          to="/profile"
+          class="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          title="Ir a Configuración de Perfil"
+        >
+          <div class="text-right hidden sm:block">
+            <p class="text-xs md:text-sm font-semibold text-on-surface leading-tight">
+              {{ authStore.user?.nombre || 'Usuario' }}
+            </p>
+            <p class="text-[11px] text-primary font-medium capitalize">
+              ROL: {{ authStore.user?.role || 'estandar' }}
+            </p>
+          </div>
 
-        <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface border border-outline-variant/20 shrink-0">
-          <span class="material-symbols-outlined text-primary text-[20px]">person</span>
-        </div>
+          <div class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface border border-outline-variant/20 shrink-0">
+            <span class="material-symbols-outlined text-primary text-[20px]">person</span>
+          </div>
+        </router-link>
 
         <button
           type="button"
