@@ -10,7 +10,8 @@ import ReseniasDestacadas from '@/components/features/resenias/ReseniasDestacada
 const router = useRouter()
 const authStore = useAuthStore()
 
-const reseniasKey = ref(0)
+const destacadasRef = ref<InstanceType<typeof ReseniasDestacadas> | null>(null)
+const reseniasListRef = ref<InstanceType<typeof ReseniasList> | null>(null)
 const mostrarFormulario = ref(false)
 
 function abrirFormulario() {
@@ -21,9 +22,20 @@ function cerrarFormulario() {
   mostrarFormulario.value = false
 }
 
-function handleReseniaCreated() {
-  reseniasKey.value++
+function handleReseniasListChange() {
+  destacadasRef.value?.cargarDestacadas()
+}
+
+function handleDestacadasChange() {
+  reseniasListRef.value?.cargarResenias()
+}
+
+async function handleReseniaCreated() {
   mostrarFormulario.value = false
+  await Promise.all([
+    reseniasListRef.value?.cargarResenias(),
+    destacadasRef.value?.cargarDestacadas()
+  ])
 }
 </script>
 
@@ -101,11 +113,17 @@ function handleReseniaCreated() {
       </div>
     </section>
 
-    <ReseniasDestacadas />
+    <ReseniasDestacadas
+      ref="destacadasRef"
+      @cambioEstado="handleDestacadasChange"
+    />
 
     <!-- Sección Mis Reseñas (Contenido actual de HomeView) -->
     <section class="bg-surface-container-low border border-surface-bright/50 rounded-2xl p-6 md:p-8 shadow-xl">
-      <ReseniasList :key="reseniasKey" />
+      <ReseniasList
+        ref="reseniasListRef"
+        @cambioEstado="handleReseniasListChange"
+      />
     </section>
 
     <!-- Botón Flotante Nueva Reseña (Stitch Tablero FAB) -->
