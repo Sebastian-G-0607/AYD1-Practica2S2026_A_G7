@@ -23,3 +23,8 @@ export interface ToggleResponse {
   archivada?: boolean
   message: string
 }
+
+export interface Etiqueta {
+  id: number
+  descripcion: string
+}

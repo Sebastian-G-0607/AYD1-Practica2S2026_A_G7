@@ -54,9 +54,7 @@ public static class CreateReseniaEndpoint
             if (tieneEtiquetaExistente)
             {
                 etiqueta = await dbContext.Etiquetas
-                    .FirstOrDefaultAsync(e =>
-                        e.Id == request.EtiquetaId!.Value &&
-                        e.UsuarioId == userId);
+                    .FirstOrDefaultAsync(e => e.Id == request.EtiquetaId!.Value);
 
                 if (etiqueta is null)
                 {
@@ -68,10 +66,24 @@ public static class CreateReseniaEndpoint
             }
             else
             {
+                var descripcionNormalizada = request.NuevaEtiqueta!.Trim();
+
+                var etiquetaExistente = await dbContext.Etiquetas
+                    .AnyAsync(e =>
+                        e.Descripcion.ToLower() == descripcionNormalizada.ToLower());
+
+                if (etiquetaExistente)
+                {
+                    return Results.BadRequest(new
+                    {
+                        message = "Ya existe una etiqueta con ese nombre."
+                    });
+                }
+
                 etiqueta = new Etiqueta
                 {
                     UsuarioId = userId,
-                    Descripcion = request.NuevaEtiqueta!.Trim()
+                    Descripcion = descripcionNormalizada
                 };
 
                 dbContext.Etiquetas.Add(etiqueta);

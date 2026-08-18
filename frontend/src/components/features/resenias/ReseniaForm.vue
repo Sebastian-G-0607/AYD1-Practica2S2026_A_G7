@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { createResenia } from '@/services/resenia.service'
+import { ref, onMounted } from 'vue'
+import { createResenia, getEtiquetas } from '@/services/resenia.service'
+import type { Etiqueta } from '@/types/resenia.types'
 
 const emit = defineEmits<{
   (e: 'created'): void
@@ -9,11 +10,38 @@ const emit = defineEmits<{
 const tituloPelicula = ref('')
 const calificacion = ref(5)
 const comentario = ref('')
+
+const etiquetas = ref<Etiqueta[]>([])
+const modoEtiqueta = ref<'existente' | 'nueva'>('nueva')
+const etiquetaId = ref<number | null>(null)
 const nuevaEtiqueta = ref('')
 
 const loading = ref(false)
+const loadingEtiquetas = ref(false)
 const error = ref('')
 const success = ref('')
+
+async function cargarEtiquetas() {
+  try {
+    loadingEtiquetas.value = true
+    const list = await getEtiquetas()
+    etiquetas.value = list
+
+    if (list.length > 0) {
+      modoEtiqueta.value = 'existente'
+      if (!etiquetaId.value || !list.some((e) => e.id === etiquetaId.value)) {
+        etiquetaId.value = list[0]?.id ?? null
+      }
+    } else {
+      modoEtiqueta.value = 'nueva'
+      etiquetaId.value = null
+    }
+  } catch (err) {
+    console.error('Error al cargar etiquetas:', err)
+  } finally {
+    loadingEtiquetas.value = false
+  }
+}
 
 async function handleSubmit() {
   error.value = ''
@@ -24,9 +52,27 @@ async function handleSubmit() {
     return
   }
 
-  if (!nuevaEtiqueta.value.trim()) {
-    error.value = 'La etiqueta es obligatoria.'
-    return
+  if (modoEtiqueta.value === 'existente') {
+    if (!etiquetaId.value) {
+      error.value = 'Debes seleccionar una etiqueta.'
+      return
+    }
+  } else {
+    const desc = nuevaEtiqueta.value.trim()
+    if (!desc) {
+      error.value = 'La etiqueta es obligatoria.'
+      return
+    }
+
+    // Validación case-insensitive para evitar duplicados
+    const yaExiste = etiquetas.value.some(
+      (e) => e.descripcion.trim().toLowerCase() === desc.toLowerCase(),
+    )
+
+    if (yaExiste) {
+      error.value = 'Ya existe una etiqueta con ese nombre.'
+      return
+    }
   }
 
   try {
@@ -36,8 +82,8 @@ async function handleSubmit() {
       tituloPelicula: tituloPelicula.value.trim(),
       calificacion: calificacion.value,
       comentario: comentario.value.trim() || null,
-      etiquetaId: null,
-      nuevaEtiqueta: nuevaEtiqueta.value.trim(),
+      etiquetaId: modoEtiqueta.value === 'existente' ? etiquetaId.value : null,
+      nuevaEtiqueta: modoEtiqueta.value === 'nueva' ? nuevaEtiqueta.value.trim() : null,
     })
 
     success.value = 'Reseña creada correctamente.'
@@ -47,14 +93,23 @@ async function handleSubmit() {
     comentario.value = ''
     nuevaEtiqueta.value = ''
 
+    await cargarEtiquetas()
+
     emit('created')
-  } catch (err) {
+  } catch (err: any) {
     console.error(err)
-    error.value = 'No fue posible crear la reseña.'
+    error.value =
+      err?.response?.data?.message ||
+      err?.response?.data?.title ||
+      'No fue posible crear la reseña.'
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  cargarEtiquetas()
+})
 </script>
 
 <template>
@@ -84,7 +139,7 @@ async function handleSubmit() {
           v-model="tituloPelicula"
           type="text"
           placeholder="Ej. The Dark Knight"
-          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary"
+          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary text-on-surface"
         />
       </div>
 
@@ -95,7 +150,7 @@ async function handleSubmit() {
 
         <select
           v-model="calificacion"
-          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary"
+          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary text-on-surface"
         >
           <option :value="5">★★★★★</option>
           <option :value="4">★★★★</option>
@@ -114,21 +169,75 @@ async function handleSubmit() {
           v-model="comentario"
           rows="4"
           placeholder="¿Qué te pareció la película?"
-          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary resize-none"
+          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary resize-none text-on-surface"
         ></textarea>
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-semibold">
-          Etiqueta
-        </label>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-semibold">
+            Etiqueta
+          </label>
 
-        <input
-          v-model="nuevaEtiqueta"
-          type="text"
-          placeholder="Ej. Ciencia ficción"
-          class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary"
-        />
+          <div
+            v-if="etiquetas.length > 0"
+            class="flex items-center gap-1 p-1 rounded-lg bg-surface border border-surface-bright text-xs"
+          >
+            <button
+              type="button"
+              class="px-2.5 py-1 rounded-md font-semibold transition-colors"
+              :class="
+                modoEtiqueta === 'existente'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface/60 hover:text-on-surface'
+              "
+              @click="modoEtiqueta = 'existente'"
+            >
+              Existente
+            </button>
+            <button
+              type="button"
+              class="px-2.5 py-1 rounded-md font-semibold transition-colors"
+              :class="
+                modoEtiqueta === 'nueva'
+                  ? 'bg-primary text-on-primary'
+                  : 'text-on-surface/60 hover:text-on-surface'
+              "
+              @click="modoEtiqueta = 'nueva'"
+            >
+              Nueva
+            </button>
+          </div>
+        </div>
+
+        <!-- Selector de etiqueta existente -->
+        <div v-if="modoEtiqueta === 'existente'">
+          <select
+            v-model="etiquetaId"
+            class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary text-on-surface"
+          >
+            <option :value="null" disabled>
+              Selecciona una etiqueta...
+            </option>
+            <option
+              v-for="etiqueta in etiquetas"
+              :key="etiqueta.id"
+              :value="etiqueta.id"
+            >
+              {{ etiqueta.descripcion }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Input para nueva etiqueta -->
+        <div v-else>
+          <input
+            v-model="nuevaEtiqueta"
+            type="text"
+            placeholder="Ej. Ciencia ficción"
+            class="w-full px-4 py-3 rounded-lg bg-surface border border-surface-bright outline-none focus:border-primary text-on-surface"
+          />
+        </div>
       </div>
 
       <p

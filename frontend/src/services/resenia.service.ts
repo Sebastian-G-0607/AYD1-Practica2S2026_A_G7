@@ -1,9 +1,14 @@
 import { httpClient } from '@/services/http.client'
-import type { Resenia, ReseniaRequest, ToggleResponse } from '@/types/resenia.types'
+import type { Etiqueta, Resenia, ReseniaRequest, ToggleResponse } from '@/types/resenia.types'
 
 
 export async function getResenias(): Promise<Resenia[]> {
   const response = await httpClient.get<Resenia[]>('/api/resenias')
+  return response.data
+}
+
+export async function getEtiquetas(): Promise<Etiqueta[]> {
+  const response = await httpClient.get<Etiqueta[]>('/api/resenias/etiquetas')
   return response.data
 }
 

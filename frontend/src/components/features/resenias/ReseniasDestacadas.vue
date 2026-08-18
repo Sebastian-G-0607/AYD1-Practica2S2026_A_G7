@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { getResenias, toggleDestacar, toggleArchivar } from '@/services/resenia.service'
 import type { Resenia } from '@/types/resenia.types'
 
+const emit = defineEmits(['cambioEstado'])
+
 const reseniasDestacadas = ref<Resenia[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -25,6 +27,7 @@ async function handleToggleDestacar(id: number) {
   try {
     await toggleDestacar(id)
     await cargarDestacadas()
+    emit('cambioEstado')
   } catch (err) {
     console.error('Error al cambiar estado de destacada:', err)
   }
@@ -34,6 +37,7 @@ async function handleToggleArchivar(id: number) {
   try {
     await toggleArchivar(id)
     await cargarDestacadas()
+    emit('cambioEstado')
   } catch (err) {
     console.error('Error al archivar la reseña:', err)
   }
@@ -41,6 +45,10 @@ async function handleToggleArchivar(id: number) {
 
 onMounted(() => {
   cargarDestacadas()
+})
+
+defineExpose({
+  cargarDestacadas
 })
 </script>
 

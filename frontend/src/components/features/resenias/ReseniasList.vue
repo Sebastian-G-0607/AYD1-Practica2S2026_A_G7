@@ -20,6 +20,17 @@ const { shareReviewBatch } = useShares()
 const reseniaACompartir = ref<Resenia | null>(null)
 const modalCompartirAbierto = ref(false)
 
+const statusNotification = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+
+function showNotification(type: 'success' | 'error', message: string) {
+  statusNotification.value = { type, message }
+  setTimeout(() => {
+    if (statusNotification.value?.message === message) {
+      statusNotification.value = null
+    }
+  }, 4000)
+}
+
 function abrirModalCompartir(resenia: Resenia) {
   reseniaACompartir.value = resenia
   modalCompartirAbierto.value = true
@@ -33,14 +44,14 @@ function cerrarModalCompartir() {
 async function handleShareSubmit(payload: { reseniaId: number; userIds: number[] }) {
   try {
     const res = await shareReviewBatch(payload.reseniaId, payload.userIds)
-    alert(res.mensaje || '¡Reseña compartida con éxito!')
     cerrarModalCompartir()
+    showNotification('success', res.mensaje || '¡Reseña compartida con éxito!')
   } catch (err: any) {
     const msg =
       err.response?.data?.mensaje ||
       err.response?.data?.message ||
       'Ocurrió un error al compartir la reseña.'
-    alert(msg)
+    showNotification('error', msg)
   }
 }
 
@@ -94,6 +105,7 @@ async function archivar(id: number) {
   try {
     await toggleArchivarResenia(id)
     await cargarResenias()
+    emit('cambioEstado')
   } catch (err) {
     console.error(err)
     error.value = 'No fue posible archivar la reseña.'
@@ -173,6 +185,7 @@ async function guardarEdicion(id: number) {
     reseniaEditandoId.value = null
 
     await cargarResenias()
+    emit('cambioEstado')
   } catch (err) {
     console.error(err)
     errorEdicion.value = 'No fue posible actualizar la reseña.'
@@ -213,6 +226,7 @@ async function confirmarEliminar() {
     reseniaAEliminar.value = null
 
     await cargarResenias()
+    emit('cambioEstado')
   } catch (err) {
     console.error(err)
     errorEliminacion.value = 'No fue posible eliminar la reseña.'
@@ -223,6 +237,10 @@ async function confirmarEliminar() {
 
 onMounted(() => {
   cargarResenias()
+})
+
+defineExpose({
+  cargarResenias
 })
 </script>
 
@@ -237,6 +255,34 @@ onMounted(() => {
       <p class="text-sm text-on-surface/60 mt-1">
         Tus opiniones y calificaciones de películas.
       </p>
+    </div>
+
+    <!-- Mensaje de Notificación (Éxito / Error) -->
+    <div
+      v-if="statusNotification"
+      class="p-4 rounded-xl flex items-center justify-between shadow-lg relative z-10 animate-fade-in-up border"
+      :class="
+        statusNotification.type === 'success'
+          ? 'bg-primary-container/20 border-primary/40 text-on-surface'
+          : 'bg-red-500/20 border-red-500/40 text-red-300'
+      "
+    >
+      <div class="flex items-center gap-3">
+        <span
+          class="material-symbols-outlined"
+          :class="statusNotification.type === 'success' ? 'text-primary' : 'text-red-400'"
+        >
+          {{ statusNotification.type === 'success' ? 'check_circle' : 'error' }}
+        </span>
+        <span class="text-sm font-medium">{{ statusNotification.message }}</span>
+      </div>
+      <button
+        type="button"
+        @click="statusNotification = null"
+        class="text-on-surface-variant hover:text-on-surface p-1"
+      >
+        <span class="material-symbols-outlined text-sm">close</span>
+      </button>
     </div>
 
     <!-- Cargando -->
