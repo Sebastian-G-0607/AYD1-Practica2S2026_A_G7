@@ -9,8 +9,18 @@ const { myShares, isLoading, error, fetchMyShares, shareReviewBatch, unshareRevi
 const isModalOpen = ref(false)
 const modalReseniaId = ref<number | undefined>(undefined)
 const modalReseniaTitle = ref<string>('')
-const unsharingItem = ref<MySharedItem | null>(null)
+const shareToUnshare = ref<MySharedItem | null>(null)
 const isUnsharing = ref(false)
+const statusNotification = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+
+function showNotification(type: 'success' | 'error', message: string) {
+  statusNotification.value = { type, message }
+  setTimeout(() => {
+    if (statusNotification.value?.message === message) {
+      statusNotification.value = null
+    }
+  }, 4000)
+}
 
 const getInitials = (name?: string) => {
   if (!name) return 'U'
@@ -36,38 +46,44 @@ const closeModal = () => {
 const onShareSubmit = async (payload: { reseniaId: number; userIds: number[] }) => {
   try {
     const res = await shareReviewBatch(payload.reseniaId, payload.userIds)
-    alert(res.mensaje || '¡Reseña compartida con éxito!')
     closeModal()
+    showNotification('success', res.mensaje || '¡Reseña compartida con éxito!')
     await fetchMyShares()
   } catch (err: any) {
     const msg =
       err.response?.data?.mensaje ||
       err.response?.data?.message ||
       'Ocurrió un error al compartir la reseña.'
-    alert(msg)
+    showNotification('error', msg)
   }
 }
 
-const confirmUnshare = async (share: MySharedItem) => {
-  const isConfirmed = confirm(
-    `¿Deseas dejar de compartir la reseña de "${share.tituloPelicula}" con ${share.destinatarioNombre}?`,
-  )
-  if (!isConfirmed) return
+const promptUnshare = (share: MySharedItem) => {
+  shareToUnshare.value = share
+}
 
+const cancelUnshare = () => {
+  if (isUnsharing.value) return
+  shareToUnshare.value = null
+}
+
+const executeUnshare = async () => {
+  if (!shareToUnshare.value) return
+
+  const share = shareToUnshare.value
   try {
     isUnsharing.value = true
-    unsharingItem.value = share
     const res = await unshareReview(share.reseniaId, share.usuarioDestinatarioId)
-    alert(res.mensaje || 'Se ha dejado de compartir la reseña.')
+    shareToUnshare.value = null
+    showNotification('success', res.mensaje || 'Se ha dejado de compartir la reseña.')
   } catch (err: any) {
     const msg =
       err.response?.data?.mensaje ||
       err.response?.data?.message ||
       'No fue posible cancelar el uso compartido.'
-    alert(msg)
+    showNotification('error', msg)
   } finally {
     isUnsharing.value = false
-    unsharingItem.value = null
   }
 }
 
@@ -96,6 +112,34 @@ onMounted(() => {
       >
         <span class="material-symbols-outlined text-lg">share</span>
         <span>Compartir Reseña</span>
+      </button>
+    </div>
+
+    <!-- Mensaje de Éxito / Estado -->
+    <div
+      v-if="statusNotification"
+      class="p-4 rounded-xl flex items-center justify-between shadow-lg relative z-10 animate-fade-in-up border"
+      :class="
+        statusNotification.type === 'success'
+          ? 'bg-primary-container/20 border-primary/40 text-on-surface'
+          : 'bg-red-500/20 border-red-500/40 text-red-300'
+      "
+    >
+      <div class="flex items-center gap-3">
+        <span
+          class="material-symbols-outlined"
+          :class="statusNotification.type === 'success' ? 'text-primary' : 'text-red-400'"
+        >
+          {{ statusNotification.type === 'success' ? 'check_circle' : 'error' }}
+        </span>
+        <span class="text-sm font-medium">{{ statusNotification.message }}</span>
+      </div>
+      <button
+        type="button"
+        @click="statusNotification = null"
+        class="text-on-surface-variant hover:text-on-surface p-1"
+      >
+        <span class="material-symbols-outlined text-sm">close</span>
       </button>
     </div>
 
@@ -206,15 +250,77 @@ onMounted(() => {
           <div class="col-span-1 md:col-span-1 flex justify-end">
             <button
               type="button"
-              :disabled="isUnsharing && unsharingItem?.reseniaId === share.reseniaId && unsharingItem?.usuarioDestinatarioId === share.usuarioDestinatarioId"
-              @click="confirmUnshare(share)"
-              class="p-2 text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-xs flex items-center gap-1"
+              :disabled="isUnsharing && shareToUnshare?.reseniaId === share.reseniaId && shareToUnshare?.usuarioDestinatarioId === share.usuarioDestinatarioId"
+              @click="promptUnshare(share)"
+              class="p-2 text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-xs flex items-center gap-1 disabled:opacity-50"
               title="Dejar de compartir"
             >
               <span class="material-symbols-outlined text-lg">link_off</span>
               <span class="md:hidden">Dejar de compartir</span>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Confirmación Dejar de Compartir (Inspirado en AdminRequestsView) -->
+    <div
+      v-if="shareToUnshare"
+      class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in-up"
+    >
+      <div class="bg-surface-container border border-outline-variant/20 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-outline-variant/10 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center">
+              <span class="material-symbols-outlined">link_off</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold font-headline-md text-on-surface">Dejar de Compartir</h3>
+              <p class="text-xs text-on-surface-variant">Confirmación de acción</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            :disabled="isUnsharing"
+            @click="cancelUnshare"
+            class="text-on-surface-variant hover:text-on-surface text-2xl leading-none transition-colors p-1"
+          >
+            ×
+          </button>
+        </div>
+
+        <p class="text-sm text-on-surface-variant leading-relaxed">
+          ¿Estás seguro de que deseas dejar de compartir la reseña de
+          <span class="font-bold text-on-surface">"{{ shareToUnshare.tituloPelicula }}"</span>
+          con
+          <span class="font-bold text-on-surface">{{ shareToUnshare.destinatarioNombre }}</span>?
+        </p>
+
+        <div class="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p class="text-xs text-red-300">
+            Esta persona ya no podrá ver esta reseña en su sección de "Compartidos Conmigo".
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            :disabled="isUnsharing"
+            @click="cancelUnshare"
+            class="px-4 py-2 rounded-lg bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            :disabled="isUnsharing"
+            @click="executeUnshare"
+            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-colors shadow-md flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <span v-if="isUnsharing" class="material-symbols-outlined text-sm animate-spin">sync</span>
+            <span v-else class="material-symbols-outlined text-sm">link_off</span>
+            <span>{{ isUnsharing ? 'Dejando de compartir...' : 'Dejar de compartir' }}</span>
+          </button>
         </div>
       </div>
     </div>
