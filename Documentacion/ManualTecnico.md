@@ -899,3 +899,263 @@ La notación `Seccion__Clave` (doble guión bajo) es la convención estándar de
 | Documentación OpenAPI/Swagger | Expuesta en `/openapi/v1.json` y Swagger UI |  No se registra |
 | Manejo de excepciones no controladas | Página de diagnóstico de ASP.NET (detallada) | `GlobalExceptionHandler` → `ProblemDetails` genérico |
 
+
+
+# Principios de Usabilidad de Nielsen Aplicados en CineCraft
+
+De los 10 principios heurísticos de Jakob Nielsen, el equipo seleccionó los siguientes **6**, por ser los que tienen una aplicación concreta y verificable dentro del sistema desarrollado.
+
+---
+
+## 1. Visibilidad del estado del sistema
+
+**Justificación de la elección**: en una aplicación que depende constantemente de peticiones HTTP asíncronas (crear, editar, archivar, compartir reseñas), es crítico que el usuario nunca se quede "en el aire" sin saber si su acción se procesó, falló o sigue en curso.
+
+**Aplicación concreta en el sistema**:
+- Cada formulario (login, registro, nueva reseña, edición de perfil) muestra un estado de **carga** mientras la petición está en curso, deshabilitando el botón de envío para evitar doble-clic.
+- Toda acción de escritura (crear/editar/eliminar/archivar/destacar/compartir) muestra una **confirmación visual** inmediata cuando el backend responde `200 OK`, reflejando el cambio al instante en la lista sin necesidad de recargar la página.
+- Los errores del backend (`ValidationProblemDetails`, `ApiErrorResponse`) se muestran directamente en la interfaz, nunca se pierden silenciosamente (ver interceptor de respuesta en `http.client.ts`).
+
+![Mensaje de carga o confirmación](ImagenesManualTecnico/visibilidadDelEstadoDelSistema.png)
+
+
+---
+
+## 2. Control y libertad del usuario
+
+**Justificación de la elección**: el sistema maneja acciones potencialmente irreversibles (eliminar una reseña, compartir con múltiples personas), por lo que el usuario necesita rutas de escape claras antes de confirmar.
+
+**Aplicación concreta en el sistema**:
+- El modal de **"Nueva Reseña" / "Editar Reseña"** (`ReseniaForm.vue`) incluye un botón explícito de **"Cancelar"** que cierra el formulario sin guardar cambios.
+- El modal de **"Compartir Reseña"** (`ShareReviewModal.vue`) permite deseleccionar destinatarios antes de confirmar, y cerrarse sin compartir nada.
+- El cuadro de confirmación de **eliminar reseña** presenta dos botones igual de visibles: "Confirmar" y "Cancelar", nunca fuerza la acción destructiva como única salida.
+- El formulario de **edición de perfil** solo aplica los cambios tras una confirmación adicional cuando se modifican datos sensibles (correo o contraseña), dando al usuario una última oportunidad de echarse atrás.
+
+![Botón Cancelar en formulario](ImagenesManualTecnico/controYLibertadDelUsuario.png)
+---
+
+## 3. Consistencia y estándares
+
+**Justificación de la elección**: al ser un equipo de 6 personas trabajando en paralelo sobre distintos módulos (reseñas, compartidos, administración, reportes), sin un sistema de diseño consistente la interfaz se habría visto fragmentada.
+
+**Aplicación concreta en el sistema**:
+- Todo el frontend usa un **theme centralizado de Tailwind CSS** (paleta oscura tipo cine, tonos rojo/dorado, tipografías Montserrat/Inter) aplicado de forma uniforme en Login, Tablero, Perfil, y el panel de Administración.
+- Los **componentes base reutilizables** (`components/common`) garantizan que botones, inputs, modales y tarjetas se vean y comporten igual sin importar en qué vista aparezcan.
+- La **iconografía y ubicación del menú lateral** (`Sidebar.vue`) es idéntica en todas las pantallas autenticadas, con las mismas posiciones para Tablero, Destacados, Archivados, Compartidos y Perfil.
+- La terminología es consistente en toda la app: siempre "reseña" (nunca "review" o "post"), siempre "destacar"/"archivar" (nunca sinónimos alternos).
+
+![Consistencia visual entre pantallas](ImagenesManualTecnico/consistenciaYEstandares.png)
+
+---
+
+## 4. Prevención de errores
+
+**Justificación de la elección**: el sistema tiene reglas de negocio estrictas (calificación entre 1 y 5, correos únicos, contraseñas con longitud mínima) que conviene atajar *antes* de llegar al servidor, tanto por experiencia de usuario como por evitar peticiones inválidas.
+
+**Aplicación concreta en el sistema**:
+- El campo de **calificación** en el formulario de reseña está limitado a un selector de 1 a 5 estrellas — es físicamente imposible enviar un valor fuera de ese rango desde la interfaz (reforzado además por el `CHECK` constraint `calificacion >= 1 AND calificacion <= 5` en la base de datos).
+- Los formularios de **login y registro** validan en tiempo real formato de correo (`validators.isValidEmail`) y campos no vacíos (`validators.isNotEmpty`) antes de habilitar el botón de envío.
+- El cambio de contraseña exige una **longitud mínima de 6 caracteres** validada tanto en el frontend (`validators.minLength`) como en el backend (`[MinLength(6)]` en `UsersOptions`), evitando contraseñas débiles.
+- Toda acción destructiva (**eliminar reseña**) exige una confirmación explícita antes de ejecutarse, evitando eliminaciones accidentales por un clic apresurado.
+
+![Validación en tiempo real de un formulario](ImagenesManualTecnico/prevencionDeErrores.png)
+
+---
+
+## 5. Reconocimiento antes que memorización
+
+**Justificación de la elección**: CineCraft no tiene comandos ni atajos que el usuario deba recordar; toda la navegación depende de reconocer visualmente las opciones disponibles.
+
+**Aplicación concreta en el sistema**:
+- El **menú lateral** (`Sidebar.vue`) muestra siempre visibles, con ícono y etiqueta de texto, todas las secciones disponibles (Tablero, Destacados, Archivados, Compartidos Conmigo, Mis Compartidos, Perfil) — el usuario nunca necesita recordar una ruta o un comando.
+- Cada **tarjeta de reseña** muestra sus acciones disponibles (editar, eliminar, archivar, destacar, compartir) como íconos visibles directamente sobre la tarjeta, no ocultos en menús contextuales que haya que recordar cómo abrir.
+- Los **campos de los formularios** están siempre etiquetados con su nombre (ej. "Correo Electrónico", "Calificación"), nunca dependen de placeholders que desaparecen al escribir como única pista.
+
+![Menú lateral con iconos y etiquetas](ImagenesManualTecnico/reconocimientoAntesQueMomerizar.png)
+
+---
+
+## 6. Ayuda al usuario a reconocer, diagnosticar y recuperarse de errores
+
+**Justificación de la elección**: al depender de un backend con contratos de error bien tipados (`ValidationProblemDetails`, `ApiErrorResponse`), el equipo pudo propagar mensajes de error específicos y accionables hasta la interfaz, en vez de errores genéricos.
+
+**Aplicación concreta en el sistema**:
+- Cuando el backend responde con `ValidationProblemDetails` (HTTP 400), el frontend recorre el diccionario `errors` y muestra el mensaje **específico por campo** justo debajo del input correspondiente (ej. "El campo Correo no es un correo electrónico válido"), no un error genérico de formulario.
+- Errores de negocio (`ApiErrorResponse`, ej. "Las credenciales ingresadas no son válidas") se muestran en lenguaje natural, sin códigos técnicos ni jerga de backend.
+- Ante un error inesperado del servidor (HTTP 500), el usuario nunca ve un stack trace ni detalles internos — recibe un mensaje genérico y comprensible, mientras el equipo técnico puede rastrear el problema con el `traceId` en los logs del servidor.
+
+![Mensaje de error específico en un campo](ImagenesManualTecnico/ayudaAlUsuario.png)
+
+
+# Diagrama de Workflow — Control de Versiones (GitFlow)
+
+## Diagrama Git (Mermaid gitGraph)
+
+```mermaid
+%%{init: { 'gitGraph': {'showBranches': true, 'showCommitLabel': true, 'mainBranchName': 'main'}} }%%
+gitGraph
+    commit id: "Init: Configuración inicial repo"
+    commit id: "chore: CODEOWNERS"
+    commit id: "chore: .gitignore ASP.NET/Vue"
+    branch develop
+    checkout develop
+
+    branch feature/frontend_proyectoInicial_202102984
+    commit id: "feat(frontend): config inicial [202102984]"
+    checkout develop
+    merge feature/frontend_proyectoInicial_202102984 tag: "PR#1"
+
+    branch feature/backendProyectoInicial_202300694
+    commit id: "feat(backend): EF Core+Postgres+entidades [202300694]"
+    checkout develop
+    merge feature/backendProyectoInicial_202300694 tag: "PR#2"
+
+    branch feature/registroUsuarios_202300694
+    commit id: "feat(registro): endpoint solicitud [202300694]"
+    commit id: "feat(login): maqueta + API [202300694]"
+    commit id: "feat(registro): form solicitud [202300694]"
+    checkout develop
+    merge feature/registroUsuarios_202300694 tag: "PR#3"
+
+    branch feature/reportesAdmin_202201139
+    commit id: "feat(reportes): top5 endpoints [202201139]"
+    commit id: "feat(reports): admin reports frontend [202201139]"
+
+    checkout develop
+    branch feature/crudResenias_202308227
+    commit id: "feat(resenias): listado activas [202308227]"
+    commit id: "feat(resenias): crear c/etiquetas [202308227]"
+    commit id: "feat(resenias): editar+etiquetas [202308227]"
+    commit id: "feat(resenias): soft delete [202308227]"
+    commit id: "feat(resenias): CRUD frontend [202308227]"
+    checkout develop
+    merge feature/crudResenias_202308227 tag: "PR#5"
+
+    branch feature/dockerCompose_202300694
+    commit id: "feat(docker): Dockerfile+compose [202300694]"
+    commit id: "feat(env): .env ejemplo [202300694]"
+    checkout develop
+    merge feature/dockerCompose_202300694 tag: "PR#6"
+
+    branch feature/adminPanel_202300694
+    commit id: "feat(resenias): rutas+sidebar por rol [202300694]"
+    checkout develop
+    merge feature/adminPanel_202300694 tag: "PR#7"
+
+    checkout feature/reportesAdmin_202201139
+    merge develop
+    commit id: "fix(admin): panel+nav reportes [202201139]"
+    checkout develop
+    merge feature/reportesAdmin_202201139 tag: "PR#4"
+
+    branch feature/filtroResenias_202308227
+    commit id: "fix(resenias): filtrar por usuario [202308227]"
+    checkout develop
+    merge feature/filtroResenias_202308227 tag: "PR#8"
+
+    branch release/v1.0.0
+    checkout main
+    merge release/v1.0.0 tag: "v1.0.0 (PR#9)"
+    checkout develop
+    merge main
+
+    branch feature/adminModule_202201690
+    commit id: "feat(backend): endpoints solicitudes [202201690]"
+    commit id: "feat(backend): servicio correo MailKit [202201690]"
+    commit id: "feat(backend): correo+auth admin [202201690]"
+    commit id: "fix(backend): estados/roles procesar [202201690]"
+    commit id: "feat(backend): envio correos MailKit [202201690]"
+    commit id: "feat(backend): correo+politica admin [202201690]"
+    commit id: "feat(frontend): tipos admin solicitudes [202201690]"
+    commit id: "feat(frontend): admin.service.ts [202201690]"
+    commit id: "feat(frontend): store solicitudes [202201690]"
+    commit id: "feat(frontend): vistas solicitudes/historial [202201690]"
+    commit id: "feat(frontend): rutas modulo admin [202201690]"
+    commit id: "feat(frontend): dashboard admin conectado [202201690]"
+    commit id: "fix(frontend): nav sidebar admin [202201690]"
+    commit id: "fix(frontend): prefijo /api en admin.service [202201690]"
+    commit id: "fix(frontend): debug+layout admin [202201690]"
+
+    checkout develop
+    branch feature/socialProfile_202202812
+    commit id: "feat(social): estructura vistas perfil [202202812]"
+    merge develop
+    commit id: "fix(social): sintaxis MySharesList [202202812]"
+    merge develop
+    commit id: "feat(social): modal compartir [202202812]"
+    commit id: "feat(social): dashboard compartidos conmigo [202202812]"
+    commit id: "feat(profile): form edicion perfil [202202812]"
+    merge develop
+    commit id: "feat(backend): endpoints social/perfil [202202812]"
+    commit id: "feat: insercion BD compartir reseñas [202202812]"
+    commit id: "feat: perfil+compartidas funcionales [202202812]"
+
+    checkout develop
+    branch feature/RdestacarArchivar_202102984
+    commit id: "feat(Archivar): archivar reseñas [202102984]"
+    commit id: "feat(Destacado): destacar reseñas [202102984]"
+
+    checkout develop
+    merge feature/RdestacarArchivar_202102984 tag: "PR#10"
+    merge feature/socialProfile_202202812 tag: "PR#11"
+    merge feature/adminModule_202201690 tag: "PR#13"
+
+    branch feature/solicitudRegistros_202300694
+    commit id: "fix(admin_frontend): UI solicitudes/historial [202300694]"
+    commit id: "fix(admin_backend): aprobacion/rechazo [202300694]"
+    checkout develop
+    merge feature/solicitudRegistros_202300694 tag: "PR#14"
+
+    branch release/v2.0.0
+    checkout main
+    merge release/v2.0.0 tag: "v2.0.0 (PR#15)"
+    checkout develop
+    merge main
+
+    branch documentacion_202201690
+    commit id: "docs: carpeta documentacion [202201690]"
+
+    checkout main
+    branch hotfix/v2.0.1
+    commit id: "fix: Actualización hotfix [202201139]"
+    checkout main
+    merge hotfix/v2.0.1 tag: "v2.0.1 (PR#17)"
+
+    branch hotfix/v2.0.1-to-develop
+    commit id: "fix: propagar hotfix a develop [202201139]"
+    checkout develop
+    merge hotfix/v2.0.1-to-develop tag: "PR#18"
+```
+
+## Tabla de trazabilidad de Pull Requests
+
+| PR | Rama origen | Carnet responsable | Destino | Descripción |
+|---|---|---|---|---|
+| #1 | `feature/frontend_proyectoInicial_202102984` | 202102984 | develop | Configuración inicial del frontend |
+| #2 | `feature/backendProyectoInicial_202300694` | 202300694 | develop | Configuración inicial backend (EF Core, PostgreSQL, entidades) |
+| #3 | `feature/registroUsuarios_202300694` | 202300694 | develop | Login y solicitud de registro |
+| #4 | `feature/reportesAdmin_202201139` | 202201139 | develop | Endpoints y frontend de reportes Top 5 |
+| #5 | `feature/crudResenias_202308227` | 202308227 | develop | CRUD completo de reseñas |
+| #6 | `feature/dockerCompose_202300694` | 202300694 | develop | Dockerfile, docker-compose y `.env` |
+| #7 | `feature/adminPanel_202300694` | 202300694 | develop | Protección de rutas y sidebar por rol |
+| #8 | `feature/filtroResenias_202308227` | 202308227 | release/v1.0.0 | Fix: filtrar reseñas por usuario autenticado |
+| #9 | `release/v1.0.0` | 202201139 (DevOps) | main (**tag v1.0.0**) | Primer release oficial |
+| #10 | `feature/RdestacarArchivar_202102984` | 202102984 | develop | Archivar y destacar reseñas |
+| #11 | `feature/socialProfile_202202812` | 202202812 | develop | Compartir reseñas, perfil, dashboard social |
+| #13 | `feature/adminModule_202201690` | 202201690 | develop | Módulo admin: solicitudes + notificaciones SMTP |
+| #14 | `feature/solicitudRegistros_202300694` | 202300694 | release/v2.0.0 | Fixes UI/lógica de solicitudes |
+| #15 | `release/v2.0.0` | 202201139 (DevOps) | main (**tag v2.0.0**) | Segundo release oficial |
+| — | `documentacion_202201690` | 202201690 | *(pendiente de merge)* | Carpeta de documentación del proyecto |
+
+### 4. Tabla de commits por carnet (resumen para tu documentación)
+
+| Carnet | Ramas trabajadas |
+|---|---|
+| 202300694 | `backendProyectoInicial`, `registroUsuarios`, `dockerCompose`, `adminPanel`, `solicitudRegistros` |
+| 202308227 | `crudResenias`, `filtroResenias` |
+| 202102984 | `frontend_proyectoInicial`, `RdestacarArchivar` |
+| 202202812 | `socialProfile` |
+| 202201690 | `adminModule`, `documentacion` |
+| 202201139 | `reportesAdmin`, `hotfix/v2.0.1` (inferido) |
+
+
